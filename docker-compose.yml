@@ -1,0 +1,52 @@
+services:
+  trading-engine:
+    build: .
+    environment:
+      TRADING_MODE: ${TRADING_MODE:-BACKTEST}
+      BROKER: ${BROKER:-IBKR}
+      IBKR_HOST: ${IBKR_HOST:-ib-gateway}
+      IBKR_PORT: ${IBKR_PORT:-4002}
+      IBKR_CLIENT_ID: ${IBKR_CLIENT_ID:-10}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-momentum_trader}
+      POSTGRES_USER: ${POSTGRES_USER:-momentum}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      DATA_PROVIDER: ${DATA_PROVIDER:-CSV}
+      CSV_DATA_PATH: ${CSV_DATA_PATH:-data/raw}
+      MARKET_DATA_INSERT_BATCH_SIZE: ${MARKET_DATA_INSERT_BATCH_SIZE:-2000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: python -m app.main
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-momentum_trader}
+      POSTGRES_USER: ${POSTGRES_USER:-momentum}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-momentum} -d ${POSTGRES_DB:-momentum_trader}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # IB Gateway placeholder — configure in a future integration phase.
+  # ib-gateway:
+  #   image: ghcr.io/extrange/ibkr-gateway:latest
+  #   environment:
+  #     TWS_USERID: ${IBKR_USERNAME}
+  #     TWS_PASSWORD: ${IBKR_PASSWORD}
+  #     TRADING_MODE: paper
+  #   ports:
+  #     - "${IBKR_PORT:-4002}:4002"
+
+volumes:
+  postgres_data:
