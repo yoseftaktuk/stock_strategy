@@ -9,6 +9,8 @@ from app.backtest.diagnostics import CURRENT_UNIVERSE_WARNING, DataCoverageSnaps
 from app.backtest.result import BacktestResult
 from app.domain.models.equity import EquityPoint
 from app.domain.models.fill import Fill
+from app.domain.models.order import Order
+from app.domain.enums import OrderSide, OrderStatus, OrderType
 from app.ui.presentation import coverage_table, equity_table, fills_table, rebalance_diagnostics_table, summary_table
 from app.universe.factory import CURRENT, HISTORICAL_SP500
 
@@ -53,6 +55,19 @@ def _result() -> BacktestResult:
                 price=Decimal("150.25"),
                 commission=Decimal("1.50"),
                 timestamp=datetime(2024, 1, 3, 14, 30, tzinfo=timezone.utc),
+                slippage=Decimal("0.10"),
+                market_price=Decimal("150.24"),
+            ),
+        ),
+        orders=(
+            Order(
+                symbol="AAPL",
+                side=OrderSide.BUY,
+                quantity=Decimal("10"),
+                order_type=OrderType.MARKET,
+                limit_price=None,
+                client_order_id="2024-01-03-0001",
+                status=OrderStatus.FILLED,
             ),
         ),
         spy_buy_hold_return=0.08,
@@ -73,8 +88,8 @@ def test_summary_table_formats_metrics() -> None:
     assert values["Volatility"] == "20.00%"
     assert values["Sharpe"] == "1.50"
     assert values["Max Drawdown"] == "-3.00%"
-    assert values["Trades"] == "2"
-    assert values["Winning / Losing"] == "1 / 1"
+    assert values["Fills"] == "2"
+    assert values["Winning / Losing sells"] == "1 / 1"
     assert values["Commission"] == "$10.25"
     assert values["Slippage"] == "$5.00"
     assert values["SPY Buy & Hold"] == "8.00%"
@@ -114,6 +129,7 @@ def test_coverage_table_reads_application_snapshot() -> None:
     assert values["Unique constituents"] == "749"
     assert values["Market Data Available"] == "2"
     assert values["Missing Market Data"] == "747"
+    assert values["Unusable Market Data"] == "0"
     assert values["Insufficient History"] == "1"
     assert values["Momentum Eligible"] == "8"
     assert values["Selected"] == "8"
@@ -121,7 +137,38 @@ def test_coverage_table_reads_application_snapshot() -> None:
     summary = dict(zip(summary_table(result)["Metric"], summary_table(result)["Value"], strict=True))
     assert summary["PIT Universe Members"] == "506"
     assert summary["Market Data Available"] == "2"
+    assert summary["Unusable Market Data"] == "0"
     assert "Universe warning" not in summary
+
+
+@pytest.mark.unit
+def test_summary_and_coverage_show_unusable_and_unvalued() -> None:
+    snapshot = DataCoverageSnapshot(
+        universe_member_peak=500,
+        universe_members=500,
+        market_data_available=10,
+        missing_market_data=5,
+        unusable_market_data=2,
+        insufficient_history=0,
+        momentum_eligible=8,
+        selected=8,
+    )
+    result = replace(
+        _result(),
+        universe_kind=HISTORICAL_SP500,
+        coverage=snapshot,
+        unusable_symbols=("RICH", "EDGE"),
+        unvalued_symbols=("GROW",),
+        warnings=("price series ended; position left unvalued (not marked at last price) symbol=GROW date=2024-02-11",),
+    )
+    summary = dict(zip(summary_table(result)["Metric"], summary_table(result)["Value"], strict=True))
+    coverage = dict(zip(coverage_table(result)["Metric"], coverage_table(result)["Value"], strict=True))
+    assert summary["Unusable Market Data"] == "2"
+    assert summary["Unusable symbols"] == "RICH, EDGE"
+    assert summary["Unvalued residual positions"] == "GROW"
+    assert coverage["Unusable Market Data"] == "2"
+    assert coverage["Unusable symbols"] == "RICH, EDGE"
+    assert coverage["Unvalued residual positions"] == "GROW"
 
 
 @pytest.mark.unit
@@ -159,6 +206,7 @@ def test_rebalance_diagnostics_table_rows() -> None:
         "Rebalance",
         "Universe Members",
         "Missing Market Data",
+        "Unusable Market Data",
         "Insufficient History",
         "Failed Price Filter",
         "Failed Liquidity Filter",
@@ -182,10 +230,24 @@ def test_equity_table_converts_drawdown_and_returns_to_percent() -> None:
 @pytest.mark.unit
 def test_fills_table_rows() -> None:
     table = fills_table(_result())
-    assert list(table.columns) == ["Time", "Symbol", "Quantity", "Price", "Commission"]
+    assert list(table.columns) == [
+        "Time",
+        "Symbol",
+        "Side",
+        "Quantity",
+        "Market Price",
+        "Fill Price",
+        "Commission",
+        "Slippage",
+        "Order ID",
+    ]
     assert table.iloc[0]["Symbol"] == "AAPL"
+    assert table.iloc[0]["Side"] == "BUY"
     assert table.iloc[0]["Quantity"] == pytest.approx(10.0)
-    assert table.iloc[0]["Price"] == pytest.approx(150.25)
+    assert table.iloc[0]["Market Price"] == pytest.approx(150.24)
+    assert table.iloc[0]["Fill Price"] == pytest.approx(150.25)
+    assert table.iloc[0]["Slippage"] == pytest.approx(0.10)
+    assert table.iloc[0]["Order ID"] == "2024-01-03-0001"
 
 
 @pytest.mark.unit

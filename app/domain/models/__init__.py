@@ -4,6 +4,12 @@ from app.domain.models.market_bar import MarketBar
 from app.domain.models.order import Order
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.position import Position
+from app.domain.models.security import (
+    Resolution,
+    Security,
+    SecurityIdentifier,
+    SecurityTicker,
+)
 from app.domain.models.signal import MomentumSignal
 from app.domain.models.stock import Stock
 from app.domain.models.target import TargetPortfolio, TargetPosition
@@ -16,6 +22,10 @@ __all__ = [
     "Order",
     "Portfolio",
     "Position",
+    "Resolution",
+    "Security",
+    "SecurityIdentifier",
+    "SecurityTicker",
     "Stock",
     "TargetPortfolio",
     "TargetPosition",

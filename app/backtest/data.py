@@ -4,6 +4,8 @@ from pathlib import Path
 
 from app.data.market_data import MarketDataService
 from app.domain.models.market_bar import MarketBar
+from app.security_master.interface import SecurityMaster
+from app.security_master.vendor import vendor_fetch_symbols
 
 _OHLCV_COLUMNS = frozenset({"symbol", "timestamp", "open", "high", "low", "close", "volume"})
 _UNIVERSE_CACHE_STEMS = frozenset({"sp500_historical"})
@@ -64,10 +66,44 @@ def load_market_data(
     end: date,
     *,
     lookback_days: int,
+    security_master: SecurityMaster | None = None,
 ) -> dict[str, list[MarketBar]]:
-    """Load history once, including a calendar buffer before ``start`` for warmup."""
+    """Load history once, including a calendar buffer before ``start`` for warmup.
+
+    When a Security Master is provided, resolved listings also fetch catalog
+    yahoo symbols. Bars keep the vendor ``bar.symbol``. The dict key remains
+    the PIT listing ticker. Unresolved names use the ticker-row path.
+    """
     history_start = warmup_history_start(start, lookback_days)
     loaded: dict[str, list[MarketBar]] = {}
     for symbol in symbols:
-        loaded[symbol] = list(service.get_history(symbol, history_start, end))
+        loaded[symbol] = _load_symbol_history(
+            service,
+            symbol,
+            history_start,
+            end,
+            security_master=security_master,
+        )
     return loaded
+
+
+def _load_symbol_history(
+    service: MarketDataService,
+    listing_ticker: str,
+    history_start: date,
+    end: date,
+    *,
+    security_master: SecurityMaster | None,
+) -> list[MarketBar]:
+    names = vendor_fetch_symbols(security_master, listing_ticker, history_start, end)
+    listing_bars = list(service.get_history(names[0], history_start, end)) if names else []
+    vendor_names = names[1:]
+    if not vendor_names:
+        return listing_bars
+    vendor_bars: list[MarketBar] = []
+    for name in vendor_names:
+        vendor_bars.extend(service.get_history(name, history_start, end))
+    if vendor_bars:
+        vendor_bars.sort(key=lambda bar: bar.timestamp)
+        return vendor_bars
+    return listing_bars

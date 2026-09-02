@@ -13,13 +13,13 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+from app.data.price_quality import DEFAULT_EXTREME_FIRST_CLOSE
 from app.universe.memory import InMemoryUniverseProvider
 from app.universe.models import ConstituentMembership
 from app.universe.validation import MembershipIssue, MembershipValidationReport, validate_memberships
 
 FIXTURE_SOURCE = "test-fixture"
 DEFAULT_PRICE_GAP_DAYS = 365
-DEFAULT_EXTREME_FIRST_CLOSE = Decimal("1000")
 
 CLASS_VALID = "a"
 CLASS_TICKER_CHANGE = "b"
@@ -140,12 +140,19 @@ def future_members_present(
     """Current (open-ended) members whose start_date is after ``as_of`` but appear in ``selected``.
 
     Empty for a correct PIT query. Non-empty if today's membership leaked into a
-    historical date.
+    historical date. Re-entrants that also have a valid interval containing
+    ``as_of`` are not flagged.
     """
     selected_set = set(selected)
+    valid_now = {item.symbol for item in memberships if item.contains(as_of)}
     leaked: set[str] = set()
     for item in memberships:
-        if item.end_date is None and item.start_date > as_of and item.symbol in selected_set:
+        if (
+            item.end_date is None
+            and item.start_date > as_of
+            and item.symbol in selected_set
+            and item.symbol not in valid_now
+        ):
             leaked.add(item.symbol)
     return leaked
 

@@ -8,6 +8,7 @@ from app.domain.models.fill import Fill
 from app.domain.models.market_bar import MarketBar
 from app.domain.models.order import Order
 from app.domain.models.portfolio import Portfolio
+from app.domain.models.security import Security, SecurityIdentifier, SecurityTicker
 from app.domain.models.signal import MomentumSignal
 from app.universe.models import ConstituentMembership
 
@@ -60,3 +61,15 @@ class SP500ConstituentRepository(Protocol):
     def get_all_memberships(self) -> Sequence[ConstituentMembership]: ...
 
     def upsert_memberships(self, memberships: Sequence[ConstituentMembership]) -> tuple[int, int]: ...
+
+
+class SecurityMasterRepository(Protocol):
+    def upsert_securities(self, securities: Sequence[Security]) -> tuple[int, int]: ...
+
+    def upsert_tickers(self, tickers: Sequence[SecurityTicker]) -> tuple[int, int]: ...
+
+    def upsert_identifiers(self, identifiers: Sequence[SecurityIdentifier]) -> tuple[int, int]: ...
+
+    def load_all(
+        self,
+    ) -> tuple[tuple[Security, ...], tuple[SecurityTicker, ...], tuple[SecurityIdentifier, ...]]: ...

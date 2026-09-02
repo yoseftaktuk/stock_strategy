@@ -11,7 +11,7 @@ from app.backtest.diagnostics import CURRENT_UNIVERSE_WARNING, is_current_univer
 from app.backtest.exceptions import EmptyUniverseError, InsufficientHistoryError
 from app.backtest.result import BacktestResult
 from app.backtest.runner import available_symbols, run_momentum_backtest
-from app.backtest.export import fills_csv_text, orders_csv_text
+from app.backtest.export import equity_csv_text, fills_csv_text, orders_csv_text
 from app.config.settings import Settings
 from app.database.exceptions import DatabaseConnectionError
 from app.ui.presentation import (
@@ -130,10 +130,21 @@ def _render_result(result: BacktestResult) -> None:
     coverage_warning = result.coverage.warning if result.coverage is not None else None
     if coverage_warning:
         st.warning(coverage_warning)
+    quality_warnings = [
+        warning
+        for warning in result.warnings
+        if "Unusable price series" in warning
+        or "Price-quality validation failed" in warning
+        or "position left unvalued" in warning
+    ]
+    for warning in quality_warnings:
+        st.warning(warning)
     other_warnings = [
         warning
         for warning in result.warnings
-        if warning != CURRENT_UNIVERSE_WARNING and warning != coverage_warning
+        if warning != CURRENT_UNIVERSE_WARNING
+        and warning != coverage_warning
+        and warning not in quality_warnings
     ]
     if other_warnings:
         with st.expander(f"Warnings ({len(other_warnings)})", expanded=True):
@@ -159,39 +170,51 @@ def _render_result(result: BacktestResult) -> None:
 
     if equity.empty:
         st.info("No equity curve points for this run.")
-        return
+    else:
+        left, right = st.columns(2)
+        with left:
+            st.subheader("Equity")
+            st.plotly_chart(_equity_figure(equity), width="stretch")
+        with right:
+            st.subheader("Drawdown")
+            st.plotly_chart(_drawdown_figure(equity), width="stretch")
 
-    left, right = st.columns(2)
-    with left:
-        st.subheader("Equity")
-        st.plotly_chart(_equity_figure(equity), width="stretch")
-    with right:
-        st.subheader("Drawdown")
-        st.plotly_chart(_drawdown_figure(equity), width="stretch")
-
-    st.subheader("Trades")
-    st.caption("Trades equals fill count from the backtest engine (one fill per accepted order). BUY and SELL are both listed.")
+    st.subheader("Fills")
+    st.caption(
+        "Fills are successful executions from BacktestResult "
+        "(number_of_trades = fill count; one fill per accepted order). "
+        "Side comes from the related Order. Winning / Losing counts SELL fills versus average cost only."
+    )
     if fills.empty:
         st.info("No fills.")
     else:
         st.dataframe(fills, hide_index=True, width="stretch")
-        left_dl, right_dl = st.columns(2)
-        with left_dl:
-            st.download_button(
-                "Download fills.csv",
-                data=fills_csv_text(result),
-                file_name="fills.csv",
-                mime="text/csv",
-                key="download_fills",
-            )
-        with right_dl:
-            st.download_button(
-                "Download orders.csv",
-                data=orders_csv_text(result),
-                file_name="orders.csv",
-                mime="text/csv",
-                key="download_orders",
-            )
+
+    left_dl, mid_dl, right_dl = st.columns(3)
+    with left_dl:
+        st.download_button(
+            "Download fills.csv",
+            data=fills_csv_text(result),
+            file_name="fills.csv",
+            mime="text/csv",
+            key="download_fills",
+        )
+    with mid_dl:
+        st.download_button(
+            "Download orders.csv",
+            data=orders_csv_text(result),
+            file_name="orders.csv",
+            mime="text/csv",
+            key="download_orders",
+        )
+    with right_dl:
+        st.download_button(
+            "Download equity_curve.csv",
+            data=equity_csv_text(result),
+            file_name="equity_curve.csv",
+            mime="text/csv",
+            key="download_equity",
+        )
 
 
 def _equity_figure(equity: pd.DataFrame) -> go.Figure:

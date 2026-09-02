@@ -23,6 +23,7 @@ class DataCoverageSnapshot:
     universe_members: int = 0
     market_data_available: int = 0
     missing_market_data: int = 0
+    unusable_market_data: int = 0
     insufficient_history: int = 0
     momentum_eligible: int = 0
     selected: int = 0
@@ -39,12 +40,14 @@ class RebalanceDiagnostics:
     failed_liquidity_filter: int
     momentum_eligible: int
     selected: int
+    unusable_market_data: int = 0
 
     def format_block(self) -> str:
         return (
             f"Rebalance: {self.as_of.isoformat()}\n"
             f"Universe Members: {self.universe_members}\n"
             f"Missing Market Data: {self.missing_market_data}\n"
+            f"Unusable Market Data: {self.unusable_market_data}\n"
             f"Insufficient History: {self.insufficient_history}\n"
             f"Failed Price Filter: {self.failed_price_filter}\n"
             f"Failed Liquidity Filter: {self.failed_liquidity_filter}\n"
@@ -80,4 +83,16 @@ def historical_market_data_coverage_warning(missing_market_data: int) -> str | N
         "Market data is currently incomplete:\n"
         f"{missing_market_data} historical constituents have no local price data.\n\n"
         "The current result is NOT a full S&P 500 historical backtest."
+    )
+
+
+def historical_unusable_market_data_warning(unusable_market_data: int) -> str | None:
+    """Warning when PIT members have loaded bars that fail price-quality checks."""
+    if unusable_market_data <= 0:
+        return None
+    return (
+        "Historical S&P 500 membership is applied.\n\n"
+        "Price-quality validation failed for "
+        f"{unusable_market_data} constituent price series.\n\n"
+        "Those series cannot fill. Universe membership was not dropped."
     )

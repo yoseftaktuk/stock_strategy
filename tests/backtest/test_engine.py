@@ -9,8 +9,9 @@ from app.application.portfolio_service import PortfolioService
 from app.backtest.config import BacktestConfig
 from app.backtest.engine import BacktestEngine, _monthly_rebalance_dates
 from app.broker.simulated import SimulatedBroker
-from app.domain.enums import OrderSide, RebalanceFrequency
+from app.domain.enums import OrderSide, OrderStatus, OrderType, RebalanceFrequency
 from app.domain.execution import apply_slippage
+from app.domain.models.order import Order
 from app.risk.risk_manager import RiskManager
 from app.strategy.momentum import MomentumStrategy
 from tests.fixtures.momentum import TEST_CONFIG, make_bar, make_series
@@ -84,6 +85,10 @@ def test_engine_end_to_end_is_deterministic() -> None:
     result_b = second.run(START, END, market_data=market_data)
     assert result_a.equity_curve == result_b.equity_curve
     assert result_a.fills == result_b.fills
+    assert result_a.orders == result_b.orders
+    assert result_a.total_commission == result_b.total_commission
+    assert result_a.total_slippage == result_b.total_slippage
+    assert result_a.final_equity == result_b.final_equity
     assert result_a.total_return == result_b.total_return
     assert result_a.number_of_trades == result_b.number_of_trades
     assert result_a.final_equity > 0
@@ -210,6 +215,7 @@ def test_result_report_contains_headings() -> None:
     assert "BACKTEST RESULT" in report
     assert "Sharpe:" in report
     assert "Max Drawdown:" in report
+    assert "Fills:" in report
     assert "Universe:" in report
     assert "explicit" in report
 
@@ -223,3 +229,145 @@ def test_short_calendar_records_no_rebalance_warning() -> None:
     assert result.warnings
     assert "warmup sessions" in result.warnings[0]
     assert "Warnings:" in result.format_report()
+
+
+@pytest.mark.backtest
+def test_fills_never_occur_on_signal_dates() -> None:
+    market_data = _market_data()
+    trading_dates = sorted(
+        {bar.timestamp.date() for bars in market_data.values() for bar in bars if START <= bar.timestamp.date() <= END}
+    )
+    rebalance_dates = _monthly_rebalance_dates(trading_dates, TEST_CONFIG.lookback_days + 1)
+    engine, _ = _engine(_config())
+    result = engine.run(START, END, market_data=market_data)
+    fill_dates = {fill.timestamp.date() for fill in result.fills}
+    assert fill_dates
+    assert fill_dates.isdisjoint(rebalance_dates)
+    for fill in result.fills:
+        assert fill.timestamp.date() != START or START not in rebalance_dates
+
+
+@pytest.mark.backtest
+def test_every_fill_uses_next_open_with_slippage() -> None:
+    market_data = _market_data()
+    slippage_bps = Decimal("10")
+    engine, _ = _engine(_config(slippage_bps=slippage_bps, commission_rate=Decimal("0")))
+    result = engine.run(START, END, market_data=market_data)
+    assert result.fills
+    orders_by_id = {order.client_order_id: order for order in result.orders}
+    opens_by_date: dict[date, dict[str, Decimal]] = {}
+    for symbol, bars in market_data.items():
+        for bar in bars:
+            session = bar.timestamp.date()
+            if START <= session <= END:
+                opens_by_date.setdefault(session, {})[symbol] = bar.open
+    for fill in result.fills:
+        order = orders_by_id[fill.order_id]
+        market = opens_by_date[fill.timestamp.date()][fill.symbol]
+        expected = apply_slippage(order.side, market, slippage_bps)
+        assert fill.price == expected
+        assert fill.market_price == market
+
+
+@pytest.mark.backtest
+def test_last_session_rebalance_warns_and_does_not_fill_after_end() -> None:
+    end = date(2024, 2, 1)
+    market_data = _market_data(count=31)
+    engine, _ = _engine(_config(end_date=end))
+    result = engine.run(START, end, market_data=market_data)
+    assert any("Final rebalance was not executed" in warning for warning in result.warnings)
+    assert all(fill.timestamp.date() <= end for fill in result.fills)
+    assert all(fill.timestamp.date() != end for fill in result.fills)
+
+
+@pytest.mark.backtest
+def test_extreme_first_close_marks_series_unusable_without_dropping_membership() -> None:
+    market_data = _market_data()
+    market_data["RICH"] = make_series(
+        "RICH",
+        80,
+        start=START,
+        close=Decimal("5000"),
+        volume=2_000_000,
+    )
+    engine, _ = _engine(_config())
+    result = engine.run(START, END, market_data=market_data)
+    extreme = [warning for warning in result.warnings if "Unusable price series" in warning]
+    assert extreme
+    assert "RICH" in extreme[0]
+    assert "PIT membership was not dropped" in extreme[0]
+    assert all(fill.symbol != "RICH" for fill in result.fills)
+    assert "RICH" in result.unusable_symbols
+    assert "RICH" in result.priced_symbols
+
+
+@pytest.mark.backtest
+def test_risk_rejected_orders_are_rejected_and_produce_no_fill() -> None:
+    class ForcedShortOrderService:
+        def create_orders_from_targets(self, *args: object, **kwargs: object) -> list[Order]:
+            return [
+                Order(
+                    symbol="NVDA",
+                    side=OrderSide.SELL,
+                    quantity=Decimal("1"),
+                    order_type=OrderType.MARKET,
+                    limit_price=None,
+                    client_order_id="risk-reject-0001",
+                )
+            ]
+
+    config = _config()
+    broker = SimulatedBroker(
+        initial_capital=config.initial_capital,
+        commission_rate=config.commission_rate,
+        slippage_bps=config.slippage_bps,
+    )
+    engine = BacktestEngine(
+        strategy=MomentumStrategy(TEST_CONFIG),
+        broker=broker,
+        portfolio_service=PortfolioService(),
+        order_service=ForcedShortOrderService(),  # type: ignore[arg-type]
+        risk_manager=RiskManager(),
+        config=config,
+    )
+    result = engine.run(START, END, market_data=_market_data())
+    assert result.orders
+    assert all(order.status == OrderStatus.REJECTED for order in result.orders)
+    assert result.fills == ()
+    assert result.total_commission == Decimal("0")
+    assert result.total_slippage == Decimal("0")
+    assert broker.get_account().cash == config.initial_capital
+
+
+@pytest.mark.backtest
+def test_result_accounting_invariants() -> None:
+    config = _config(slippage_bps=Decimal("10"), commission_rate=Decimal("0.0005"))
+    engine, broker = _engine(config)
+    result = engine.run(START, END, market_data=_market_data())
+    assert result.number_of_trades == len(result.fills)
+    assert result.total_commission == sum((fill.commission for fill in result.fills), start=Decimal("0"))
+    assert result.total_slippage == sum((fill.slippage for fill in result.fills), start=Decimal("0"))
+    assert result.total_return == pytest.approx(float(result.final_equity / result.initial_capital - 1))
+    orders_by_id = {order.client_order_id: order for order in result.orders}
+    for fill in result.fills:
+        assert fill.order_id in orders_by_id
+        assert sum(1 for order in result.orders if order.client_order_id == fill.order_id) == 1
+        assert orders_by_id[fill.order_id].status == OrderStatus.FILLED
+    rejected = [order for order in result.orders if order.status == OrderStatus.REJECTED]
+    rejected_ids = {order.client_order_id for order in rejected}
+    assert all(fill.order_id not in rejected_ids for fill in result.fills)
+    cash = result.initial_capital
+    for fill in result.fills:
+        order = orders_by_id[fill.order_id]
+        gross = fill.quantity * fill.price
+        if order.side == OrderSide.BUY:
+            cash -= gross + fill.commission
+        else:
+            cash += gross - fill.commission
+    assert cash == result.equity_curve[-1].cash
+    account = broker.get_account()
+    assert account.equity == result.final_equity
+    marked = account.cash + sum((position.market_value for position in account.positions), start=Decimal("0"))
+    assert marked == result.final_equity
+    filled = [order for order in result.orders if order.status == OrderStatus.FILLED]
+    assert len(result.fills) == len(filled)

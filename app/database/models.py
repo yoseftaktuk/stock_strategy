@@ -182,3 +182,78 @@ class SP500ConstituentMembershipModel(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class SecurityModel(Base):
+    """Canonical security identity. Not a ticker row; not PIT membership."""
+
+    __tablename__ = "securities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    seed_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    display_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    security_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    tickers: Mapped[list["SecurityTickerModel"]] = relationship(back_populates="security")
+    identifiers: Mapped[list["SecurityIdentifierModel"]] = relationship(back_populates="security")
+
+
+class SecurityTickerModel(Base):
+    """Time-bounded listing or vendor ticker assignment."""
+
+    __tablename__ = "security_tickers"
+    __table_args__ = (
+        Index("ix_security_tickers_scheme_ticker", "scheme", "ticker", "valid_from"),
+        Index(
+            "uq_security_tickers_interval",
+            "scheme",
+            "ticker",
+            "valid_from",
+            text(f"COALESCE(valid_to, {OPEN_INTERVAL_SENTINEL})"),
+            unique=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    security_id: Mapped[int] = mapped_column(ForeignKey("securities.id"), nullable=False)
+    scheme: Mapped[str] = mapped_column(String(20), nullable=False)
+    ticker: Mapped[str] = mapped_column(String(20), nullable=False)
+    valid_from: Mapped[date] = mapped_column(Date, nullable=False)
+    valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
+    continuity: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    source: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    source_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    security: Mapped["SecurityModel"] = relationship(back_populates="tickers")
+
+
+class SecurityIdentifierModel(Base):
+    """External identifier attribute attached to a security."""
+
+    __tablename__ = "security_identifiers"
+    __table_args__ = (
+        Index(
+            "uq_security_identifiers_type_value_from",
+            "id_type",
+            "id_value",
+            text("COALESCE(valid_from, DATE '0001-01-01')"),
+            unique=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    security_id: Mapped[int] = mapped_column(ForeignKey("securities.id"), nullable=False)
+    id_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    id_value: Mapped[str] = mapped_column(String(64), nullable=False)
+    valid_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    security: Mapped["SecurityModel"] = relationship(back_populates="identifiers")

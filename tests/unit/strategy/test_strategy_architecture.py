@@ -14,6 +14,7 @@ FORBIDDEN_STRATEGY_IMPORTS = (
     "app.broker",
     "app.data.providers",
     "app.universe.providers",
+    "app.security_master",
     "submit_order",
     "get_account",
     "get_positions",

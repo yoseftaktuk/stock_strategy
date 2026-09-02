@@ -1,0 +1,115 @@
+DATA QUALITY VALIDATION
+Period: 2015-01-01 → 2025-12-31
+Universe: Historical S&P 500 Point-in-Time
+PIT members encountered: 724
+PIT universe peak: 506
+Missing price data: 129
+Unusable price series: 3
+Unusable symbols: CCE, HAR, PARA
+Fills involving unusable symbols: none
+Orders: 1509
+Fills: 1509
+Rejected orders: 0
+Stuck unvalued positions: ESRX
+Stale last-price MTM after series end: no
+Final status: DATA_QUALITY_INCOMPLETE
+Research readiness: NOT READY
+Warnings:
+price series ended; position left unvalued (not marked at last price) symbol=ESRX date=2018-12-24
+missing open for execution symbol=ESRX date=2019-01-03
+missing open for execution symbol=ESRX date=2019-02-04
+missing open for execution symbol=ESRX date=2019-03-04
+missing open for execution symbol=ESRX date=2019-04-02
+missing open for execution symbol=ESRX date=2019-05-02
+missing open for execution symbol=ESRX date=2019-06-04
+missing open for execution symbol=ESRX date=2019-07-02
+missing open for execution symbol=ESRX date=2019-08-02
+missing open for execution symbol=ESRX date=2019-09-04
+missing open for execution symbol=ESRX date=2019-10-02
+missing open for execution symbol=ESRX date=2019-11-04
+missing open for execution symbol=ESRX date=2019-12-03
+missing open for execution symbol=ESRX date=2020-01-03
+missing open for execution symbol=ESRX date=2020-02-04
+missing open for execution symbol=ESRX date=2020-03-03
+missing open for execution symbol=ESRX date=2020-04-02
+missing open for execution symbol=ESRX date=2020-05-04
+missing open for execution symbol=ESRX date=2020-06-02
+missing open for execution symbol=ESRX date=2020-07-02
+missing open for execution symbol=ESRX date=2020-08-04
+missing open for execution symbol=ESRX date=2020-09-02
+missing open for execution symbol=ESRX date=2020-10-02
+missing open for execution symbol=ESRX date=2020-11-03
+missing open for execution symbol=ESRX date=2020-12-02
+missing open for execution symbol=ESRX date=2021-01-05
+missing open for execution symbol=ESRX date=2021-02-02
+missing open for execution symbol=ESRX date=2021-03-02
+missing open for execution symbol=ESRX date=2021-04-05
+missing open for execution symbol=ESRX date=2021-05-04
+missing open for execution symbol=ESRX date=2021-06-02
+missing open for execution symbol=ESRX date=2021-07-02
+missing open for execution symbol=ESRX date=2021-08-03
+missing open for execution symbol=ESRX date=2021-09-02
+missing open for execution symbol=ESRX date=2021-10-04
+missing open for execution symbol=ESRX date=2021-11-02
+missing open for execution symbol=ESRX date=2021-12-02
+missing open for execution symbol=ESRX date=2022-01-04
+missing open for execution symbol=ESRX date=2022-02-02
+missing open for execution symbol=ESRX date=2022-03-02
+missing open for execution symbol=ESRX date=2022-04-04
+missing open for execution symbol=ESRX date=2022-05-03
+missing open for execution symbol=ESRX date=2022-06-02
+missing open for execution symbol=ESRX date=2022-07-05
+missing open for execution symbol=ESRX date=2022-08-02
+missing open for execution symbol=ESRX date=2022-09-02
+missing open for execution symbol=ESRX date=2022-10-04
+missing open for execution symbol=ESRX date=2022-11-02
+missing open for execution symbol=ESRX date=2022-12-02
+missing open for execution symbol=ESRX date=2023-01-04
+missing open for execution symbol=ESRX date=2023-02-02
+missing open for execution symbol=ESRX date=2023-03-02
+missing open for execution symbol=ESRX date=2023-04-04
+missing open for execution symbol=ESRX date=2023-05-02
+missing open for execution symbol=ESRX date=2023-06-02
+missing open for execution symbol=ESRX date=2023-07-05
+missing open for execution symbol=ESRX date=2023-08-02
+missing open for execution symbol=ESRX date=2023-09-05
+missing open for execution symbol=ESRX date=2023-10-03
+missing open for execution symbol=ESRX date=2023-11-02
+missing open for execution symbol=ESRX date=2023-12-04
+missing open for execution symbol=ESRX date=2024-01-03
+missing open for execution symbol=ESRX date=2024-02-02
+missing open for execution symbol=ESRX date=2024-03-04
+missing open for execution symbol=ESRX date=2024-04-02
+missing open for execution symbol=ESRX date=2024-05-02
+missing open for execution symbol=ESRX date=2024-06-04
+missing open for execution symbol=ESRX date=2024-07-02
+missing open for execution symbol=ESRX date=2024-08-02
+missing open for execution symbol=ESRX date=2024-09-04
+missing open for execution symbol=ESRX date=2024-10-02
+missing open for execution symbol=ESRX date=2024-11-04
+missing open for execution symbol=ESRX date=2024-12-03
+missing open for execution symbol=ESRX date=2025-01-03
+missing open for execution symbol=ESRX date=2025-02-04
+missing open for execution symbol=ESRX date=2025-03-04
+missing open for execution symbol=ESRX date=2025-04-02
+missing open for execution symbol=ESRX date=2025-05-02
+missing open for execution symbol=ESRX date=2025-06-03
+missing open for execution symbol=ESRX date=2025-07-02
+missing open for execution symbol=ESRX date=2025-08-04
+missing open for execution symbol=ESRX date=2025-09-03
+missing open for execution symbol=ESRX date=2025-10-02
+missing open for execution symbol=ESRX date=2025-11-04
+missing open for execution symbol=ESRX date=2025-12-02
+Missing market data: 129 unique constituents have no prices (peak 103 missing on a rebalance date, 120 dates). Prices loaded for 605 symbol(s). Universe membership was not dropped. Sample missing: AABA, ABC, ABMD, ADS, AGN, ALXN, ANSS, ANTM, APC, ARG, ARNC, ATVI, AVB, BBBY, BCR, BF.B, BHGE, BK, BLL, BRCM.
+Unusable price series: 3 symbol(s) failed price-quality validation (reason=extreme_first_close; possible ticker identity mismatch). Series cannot fill; PIT membership was not dropped. Sample: CCE, HAR, PARA.
+Historical S&P 500 membership is applied.
+
+Market data is currently incomplete:
+129 historical constituents have no local price data.
+
+The current result is NOT a full S&P 500 historical backtest.
+Historical S&P 500 membership is applied.
+
+Price-quality validation failed for 3 constituent price series.
+
+Those series cannot fill. Universe membership was not dropped.

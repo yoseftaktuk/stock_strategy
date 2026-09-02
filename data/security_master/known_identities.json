@@ -1,0 +1,800 @@
+{
+  "version": "1",
+  "source": "security-master-seed",
+  "source_version": "2026-09-02-coverage",
+  "securities": [
+    {
+      "seed_key": "spectra-energy",
+      "display_name": "Spectra Energy Corp",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "DELISTED",
+      "notes": "NYSE:SE until stock-for-stock merger into Enbridge on 2017-02-27. Ticker SE was later recycled by Sea Limited. Distinct from sea-limited.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001373835"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "SE",
+          "valid_from": "2007-01-03",
+          "valid_to": "2017-02-27",
+          "source": "sec-enbridge-merger"
+        }
+      ]
+    },
+    {
+      "seed_key": "sea-limited",
+      "display_name": "Sea Limited",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "NYSE:SE from IPO 2017-10-20. Recycled ticker previously used by Spectra Energy. Local SE.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001703399"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "SE",
+          "valid_from": "2017-10-20",
+          "valid_to": null,
+          "source": "sec-sea-limited-ipo"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "SE",
+          "valid_from": "2017-10-20",
+          "valid_to": null,
+          "continuity": false,
+          "source": "local-se-csv"
+        }
+      ]
+    },
+    {
+      "seed_key": "block-inc-class-a",
+      "display_name": "Block, Inc. Class A",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Square, Inc. IPO as SQ on 2015-11-19; NYSE ticker changed SQ to XYZ on 2025-01-21. Same Class A (CUSIP/ISIN unchanged). Yahoo stamps the full series as XYZ. Continuity is granted for vendor bars only.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001512673"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "SQ",
+          "valid_from": "2015-11-19",
+          "valid_to": "2025-01-21",
+          "source": "sec-block-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "XYZ",
+          "valid_from": "2025-01-21",
+          "valid_to": null,
+          "source": "sec-block-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "XYZ",
+          "valid_from": "2015-11-19",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-class-a"
+        }
+      ]
+    },
+    {
+      "seed_key": "tko-group-holdings",
+      "display_name": "TKO Group Holdings, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "New issuer (CIK 0001973266, formerly New Whale Inc.) from the WWE/UFC combination close 2023-09-12. Not a ticker rename of WWE. Yahoo TKO.csv includes WWE predecessor history before this date; those bars are not this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001973266"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "TKO",
+          "valid_from": "2023-09-12",
+          "valid_to": null,
+          "source": "sec-tko-combination"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "TKO",
+          "valid_from": "2023-09-12",
+          "valid_to": null,
+          "continuity": false,
+          "source": "yahoo-no-predecessor-continuity"
+        }
+      ]
+    },
+    {
+      "seed_key": "harman-international",
+      "display_name": "Harman International Industries, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "DELISTED",
+      "notes": "NYSE:HAR S&P 500 member until Samsung acquisition (~2017-03-10; PIT end 2017-03-13). Local HAR.csv first close ~18614 continuing to 2022-03-02 is not this security. Yahoo HAR vendor mapping is intentionally absent (UNRESOLVED).",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000801296"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "HAR",
+          "valid_from": "2006-02-01",
+          "valid_to": "2017-03-13",
+          "source": "pit-harman-samsung"
+        }
+      ]
+    },
+    {
+      "seed_key": "gamestop",
+      "display_name": "GameStop Corp.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Listing ticker GME and local Yahoo GME.csv represent the same security over the 2013-2025 research window.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001326380"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "GME",
+          "valid_from": "2002-02-13",
+          "valid_to": null,
+          "source": "sec-gamestop"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "GME",
+          "valid_from": "2002-02-13",
+          "valid_to": null,
+          "continuity": false,
+          "source": "local-gme-csv"
+        }
+      ]
+    },
+    {
+      "seed_key": "elevance-health",
+      "display_name": "Elevance Health, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Anthem, Inc. renamed to Elevance Health; NYSE ticker ANTM to ELV on 2022-06-28. Same issuer CIK 0001156039. Local ELV.csv is this security (Yahoo remapped predecessor history).",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001156039"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "ANTM",
+          "valid_from": "2002-07-25",
+          "valid_to": "2022-06-28",
+          "source": "sec-anthem-elevance-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "ELV",
+          "valid_from": "2022-06-28",
+          "valid_to": null,
+          "source": "sec-anthem-elevance-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "ELV",
+          "valid_from": "2002-07-25",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "cencora",
+      "display_name": "Cencora, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "AmerisourceBergen renamed to Cencora; NYSE ticker ABC to COR on 2023-08-30. Same issuer CIK 0001140859. Local COR.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001140859"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "ABC",
+          "valid_from": "2001-08-30",
+          "valid_to": "2023-08-30",
+          "source": "sec-amerisourcebergen-cencora-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "COR",
+          "valid_from": "2023-08-30",
+          "valid_to": null,
+          "source": "sec-amerisourcebergen-cencora-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "COR",
+          "valid_from": "2001-08-30",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "ball-corporation",
+      "display_name": "Ball Corporation",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "NYSE ticker changed BLL to BALL on 2022-05-10. Same issuer CIK 0000009389. Local BALL.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000009389"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "BLL",
+          "valid_from": "1996-01-02",
+          "valid_to": "2022-05-10",
+          "source": "sec-ball-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "BALL",
+          "valid_from": "2022-05-10",
+          "valid_to": null,
+          "source": "sec-ball-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "BALL",
+          "valid_from": "1996-01-02",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "baker-hughes",
+      "display_name": "Baker Hughes Company",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Baker Hughes Company ticker BHGE to BKR on 2019-10-18. Same issuer CIK 0001701605. Local BKR.csv is this security. Not a mapping onto a different acquirer.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001701605"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "BHGE",
+          "valid_from": "1996-01-02",
+          "valid_to": "2019-10-18",
+          "source": "sec-baker-hughes-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "BKR",
+          "valid_from": "2019-10-18",
+          "valid_to": null,
+          "source": "sec-baker-hughes-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "BKR",
+          "valid_from": "1996-01-02",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "wtw-plc",
+      "display_name": "Willis Towers Watson Public Limited Company",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Ticker WLTW to WTW on 2022-01-10. Same issuer CIK 0001140536. Local WTW.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001140536"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "WLTW",
+          "valid_from": "2016-01-05",
+          "valid_to": "2022-01-10",
+          "source": "sec-wtw-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "WTW",
+          "valid_from": "2022-01-10",
+          "valid_to": null,
+          "source": "sec-wtw-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "WTW",
+          "valid_from": "2016-01-05",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "rtx-corporation",
+      "display_name": "RTX Corporation",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "United Technologies (UTX, CIK 0000101829) was the surviving issuer after the 2020 combination with Raytheon Company; ticker UTX to RTX on 2020-04-03. Same CIK, not a new-issuer event like TKO. Local RTX.csv is this surviving issuer. Raytheon Company (RTN) is not this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000101829"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "UTX",
+          "valid_from": "1996-01-02",
+          "valid_to": "2020-04-03",
+          "source": "sec-utc-rtx-surviving-issuer"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "RTX",
+          "valid_from": "2020-04-03",
+          "valid_to": null,
+          "source": "sec-utc-rtx-surviving-issuer"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "RTX",
+          "valid_from": "1996-01-02",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-surviving-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "l3harris",
+      "display_name": "L3Harris Technologies, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Harris Corporation (HRS, CIK 0000202058) was the surviving issuer after the 2019 combination with L3; ticker HRS to LHX on 2019-06-01. Same CIK. Local LHX.csv is this surviving issuer. L3 as a standalone security is not seeded.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000202058"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "HRS",
+          "valid_from": "2008-09-22",
+          "valid_to": "2019-06-01",
+          "source": "sec-harris-l3harris-surviving-issuer"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "LHX",
+          "valid_from": "2019-06-01",
+          "valid_to": null,
+          "source": "sec-harris-l3harris-surviving-issuer"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "LHX",
+          "valid_from": "2008-09-22",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-surviving-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "corpay",
+      "display_name": "Corpay, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "FleetCor renamed to Corpay; ticker FLT to CPAY on 2024-03-25. Same issuer CIK 0001175454. Local CPAY.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001175454"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "FLT",
+          "valid_from": "2018-06-20",
+          "valid_to": "2024-03-25",
+          "source": "sec-fleetcor-corpay-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "CPAY",
+          "valid_from": "2024-03-25",
+          "valid_to": null,
+          "source": "sec-fleetcor-corpay-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "CPAY",
+          "valid_from": "2018-06-20",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "lumen-technologies",
+      "display_name": "Lumen Technologies, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "CenturyLink renamed to Lumen; ticker CTL to LUMN on 2020-09-18. Same issuer CIK 0000018926. Local LUMN.csv is this security. Index membership for CTL ended at the ticker change; the listed security continues.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000018926"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "CTL",
+          "valid_from": "1999-03-25",
+          "valid_to": "2020-09-18",
+          "source": "sec-centurylink-lumen-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "LUMN",
+          "valid_from": "2020-09-18",
+          "valid_to": null,
+          "source": "sec-centurylink-lumen-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "LUMN",
+          "valid_from": "1999-03-25",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "capri-holdings",
+      "display_name": "Capri Holdings Limited",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Michael Kors Holdings renamed to Capri Holdings; ticker KORS to CPRI on 2018-09-19. Same issuer CIK 0001530721. Local CPRI.csv is this security. Index membership for KORS ended at the ticker change; the listed security continues.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001530721"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "KORS",
+          "valid_from": "2013-11-13",
+          "valid_to": "2018-09-19",
+          "source": "sec-michael-kors-capri-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "CPRI",
+          "valid_from": "2018-09-19",
+          "valid_to": null,
+          "source": "sec-michael-kors-capri-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "CPRI",
+          "valid_from": "2013-11-13",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "everest-group",
+      "display_name": "Everest Group, Ltd.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Everest Re Group renamed to Everest Group; ticker RE to EG on 2023-07-10. Same issuer CIK 0001095073. Local EG.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001095073"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "RE",
+          "valid_from": "2017-06-19",
+          "valid_to": "2023-07-10",
+          "source": "sec-everest-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "EG",
+          "valid_from": "2023-07-10",
+          "valid_to": null,
+          "source": "sec-everest-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "EG",
+          "valid_from": "2017-06-19",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "globe-life",
+      "display_name": "Globe Life Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Torchmark renamed to Globe Life; ticker TMK to GL on 2019-08-08. Same issuer CIK 0000320335. Local GL.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000320335"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "TMK",
+          "valid_from": "1996-01-02",
+          "valid_to": "2019-08-08",
+          "source": "sec-torchmark-globe-life-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "GL",
+          "valid_from": "2019-08-08",
+          "valid_to": null,
+          "source": "sec-torchmark-globe-life-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "GL",
+          "valid_from": "1996-01-02",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "jacobs-solutions",
+      "display_name": "Jacobs Solutions Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Jacobs Engineering ticker JEC to J on 2019-12-10. Same issuer CIK 0000052988. Local J.csv is this security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000052988"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "JEC",
+          "valid_from": "2007-10-26",
+          "valid_to": "2019-12-10",
+          "source": "sec-jacobs-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "J",
+          "valid_from": "2019-12-10",
+          "valid_to": null,
+          "source": "sec-jacobs-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "J",
+          "valid_from": "2007-10-26",
+          "valid_to": null,
+          "continuity": true,
+          "source": "yahoo-remap-same-issuer"
+        }
+      ]
+    },
+    {
+      "seed_key": "fiserv",
+      "display_name": "Fiserv, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Fiserv ticker FISV to FI on 2023-06-07. Same issuer CIK 0000798354. Local vendor file is FISV.csv (Yahoo still serves the series under the old stamp in this cache).",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000798354"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "FISV",
+          "valid_from": "1996-01-02",
+          "valid_to": "2023-06-07",
+          "source": "sec-fiserv-ticker-change"
+        },
+        {
+          "scheme": "listing",
+          "ticker": "FI",
+          "valid_from": "2023-06-07",
+          "valid_to": null,
+          "source": "sec-fiserv-ticker-change"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "FISV",
+          "valid_from": "1996-01-02",
+          "valid_to": null,
+          "continuity": true,
+          "source": "local-fisv-csv"
+        }
+      ]
+    },
+    {
+      "seed_key": "berkshire-hathaway-class-b",
+      "display_name": "Berkshire Hathaway Inc. Class B",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Listing ticker BRK.B (PIT source punctuation). Yahoo vendor symbol is BRK-B. Same Class B, CIK 0001067983. Not a ticker change of identity.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001067983"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "BRK.B",
+          "valid_from": "2010-02-16",
+          "valid_to": null,
+          "source": "sec-berkshire-class-b"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "BRK-B",
+          "valid_from": "2010-02-16",
+          "valid_to": null,
+          "continuity": false,
+          "source": "yahoo-share-class-hyphen"
+        }
+      ]
+    },
+    {
+      "seed_key": "brown-forman-class-b",
+      "display_name": "Brown-Forman Corporation Class B",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "ACTIVE",
+      "notes": "Listing ticker BF.B (PIT source punctuation). Yahoo vendor symbol is BF-B. Same Class B, CIK 0000014693. Not a ticker change of identity.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000014693"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "BF.B",
+          "valid_from": "1996-01-02",
+          "valid_to": null,
+          "source": "sec-brown-forman-class-b"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "BF-B",
+          "valid_from": "1996-01-02",
+          "valid_to": null,
+          "continuity": false,
+          "source": "yahoo-share-class-hyphen"
+        }
+      ]
+    },
+    {
+      "seed_key": "paramount-global",
+      "display_name": "Paramount Global Class B",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "DELISTED",
+      "notes": "PIT listing PARA from 2022-02-17 (ViacomCBS name/ticker change to Paramount Global, CIK 0000813828). Local PARA.csv first close ~101500 is not this security. Yahoo vendor mapping omitted (UNRESOLVED). CBS/VIAB/VIAC predecessor chain is not guessed.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000813828"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "PARA",
+          "valid_from": "2022-02-17",
+          "valid_to": "2025-08-08",
+          "source": "pit-paramount-global"
+        }
+      ]
+    },
+    {
+      "seed_key": "coca-cola-enterprises",
+      "display_name": "Coca-Cola Enterprises, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "DELISTED",
+      "notes": "NYSE:CCE S&P 500 member until 2016-05-31 combination into Coca-Cola European Partners (CCEP), a different listed security. Local CCE.csv (2019-02-27→2020-04-29, first close ~1112) is not this issuer. Yahoo CCE mapping omitted. Do not map CCE→CCEP.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000318371"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "CCE",
+          "valid_from": "1998-10-08",
+          "valid_to": "2016-05-31",
+          "source": "pit-cce-ccep-combination"
+        }
+      ]
+    },
+    {
+      "seed_key": "integrys-energy",
+      "display_name": "Integrys Energy Group, Inc.",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "DELISTED",
+      "notes": "NYSE:TEG S&P 500 member until 2015-06-30 acquisition by WEC Energy. Local TEG.csv starts 2015-12-22 after membership ended (first close ~8207) and is not this security. Yahoo TEG mapping omitted. WEC is a different security.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0000862410"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "TEG",
+          "valid_from": "2007-02-22",
+          "valid_to": "2015-06-30",
+          "source": "pit-integrys-wec"
+        }
+      ]
+    },
+    {
+      "seed_key": "express-scripts",
+      "display_name": "Express Scripts Holding Company",
+      "security_type": "COMMON_STOCK",
+      "currency": "USD",
+      "status": "DELISTED",
+      "notes": "NASDAQ:ESRX acquired by Cigna; combination close 2018-12-20. PIT membership and local ESRX.csv both end 2018-12-21. Same security through listing end. Cigna (CI) is a different security; do not alias ESRX→CI. Unvalued residuals after series end are accounting, not missing ESRX bars.",
+      "identifiers": [
+        {"id_type": "CIK", "id_value": "0001532063"}
+      ],
+      "tickers": [
+        {
+          "scheme": "listing",
+          "ticker": "ESRX",
+          "valid_from": "2003-09-26",
+          "valid_to": "2018-12-21",
+          "source": "sec-express-scripts-cigna"
+        },
+        {
+          "scheme": "yahoo",
+          "ticker": "ESRX",
+          "valid_from": "2003-09-26",
+          "valid_to": "2018-12-21",
+          "continuity": false,
+          "source": "local-esrx-csv"
+        }
+      ]
+    }
+  ]
+}

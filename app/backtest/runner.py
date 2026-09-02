@@ -22,6 +22,8 @@ from app.database.repositories.sp500_constituents import PostgresSP500Constituen
 from app.database.session import ensure_database_available, session_scope
 from app.domain.models.market_bar import MarketBar
 from app.risk.risk_manager import RiskManager
+from app.security_master.interface import SecurityMaster
+from app.security_master.seed import load_known_identities_catalog
 from app.strategy.config import MomentumConfig
 from app.strategy.momentum import MomentumStrategy
 from app.universe.factory import CURRENT, create_universe_provider
@@ -97,6 +99,7 @@ def run_momentum_backtest(
 
     universe_provider: UniverseProvider | None = None
     load_symbols = explicit
+    security_master = load_known_identities_catalog()
 
     with session_scope(resolved_settings) as session:
         if not load_symbols and universe:
@@ -122,6 +125,7 @@ def run_momentum_backtest(
             start,
             end,
             lookback_days=momentum_config.lookback_days,
+            security_master=security_master,
         )
         ensure_sufficient_history(
             market_data,
@@ -140,6 +144,7 @@ def run_momentum_backtest(
         load_symbols,
         universe_provider=universe_provider,
         universe_kind=universe_kind,
+        security_master=security_master,
     )
     return engine.run(start, end, market_data=market_data)
 
@@ -197,6 +202,7 @@ def _build_engine(
     symbols: Sequence[str],
     universe_provider: UniverseProvider | None = None,
     universe_kind: str | None = None,
+    security_master: SecurityMaster | None = None,
 ) -> BacktestEngine:
     slippage_bps = settings.slippage * Decimal("10000")
     backtest_config = BacktestConfig(
@@ -224,4 +230,5 @@ def _build_engine(
         config=backtest_config,
         metrics_calculator=MetricsCalculator(),
         universe_provider=universe_provider,
+        security_master=security_master if security_master is not None else load_known_identities_catalog(),
     )

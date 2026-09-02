@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from datetime import datetime
 from decimal import Decimal
 from typing import Protocol
@@ -49,8 +49,16 @@ class SessionAwareBroker(Broker, Protocol):
     ) -> None:
         """Set execution-session market prices (typically opens)."""
 
-    def mark_to_market(self, prices: Mapping[str, Decimal]) -> None:
-        """Update position market prices without trading."""
+    def mark_to_market(
+        self,
+        prices: Mapping[str, Decimal],
+        *,
+        unvalued: Collection[str] = frozenset(),
+    ) -> None:
+        """Update position market prices without trading.
+
+        Symbols in ``unvalued`` stay on the books but are excluded from NAV.
+        """
 
 
 class BacktestBroker(SessionAwareBroker, Protocol):

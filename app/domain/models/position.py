@@ -10,6 +10,7 @@ class Position:
     quantity: Decimal
     average_price: Decimal
     market_price: Decimal
+    valued: bool = True
 
     def __post_init__(self) -> None:
         if not self.symbol.strip():
@@ -23,4 +24,6 @@ class Position:
 
     @property
     def market_value(self) -> Decimal:
+        if not self.valued:
+            return Decimal("0")
         return self.market_price * self.quantity

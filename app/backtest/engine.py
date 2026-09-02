@@ -1,4 +1,5 @@
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
 import logging
@@ -11,17 +12,22 @@ from app.backtest.diagnostics import (
     DataCoverageSnapshot,
     RebalanceDiagnostics,
     historical_market_data_coverage_warning,
+    historical_unusable_market_data_warning,
     is_current_universe,
 )
 from app.backtest.metrics import MetricsCalculator
 from app.backtest.result import BacktestResult
 from app.broker.interface import BacktestBroker
+from app.data.identity_quality import apply_identity
+from app.data.price_quality import unusable_symbols as classify_unusable_symbols
+from app.domain.enums import OrderStatus
 from app.domain.models.equity import EquityPoint
 from app.domain.models.market_bar import MarketBar
 from app.domain.models.order import Order
 from app.domain.models.position import Position
 from app.domain.models.target import TargetPortfolio
 from app.risk.risk_manager import RiskManager
+from app.security_master.interface import SecurityMaster
 from app.strategy.base import Strategy
 from app.universe.coverage import missing_market_data_symbols
 from app.universe.factory import HISTORICAL_SP500
@@ -42,6 +48,7 @@ class BacktestEngine:
         config: BacktestConfig,
         metrics_calculator: MetricsCalculator | None = None,
         universe_provider: UniverseProvider | None = None,
+        security_master: SecurityMaster | None = None,
     ) -> None:
         self._strategy = strategy
         self._broker = broker
@@ -51,6 +58,7 @@ class BacktestEngine:
         self._config = config
         self._metrics = metrics_calculator or MetricsCalculator()
         self._universe_provider = universe_provider
+        self._security_master = security_master
 
     def run(
         self,
@@ -63,6 +71,7 @@ class BacktestEngine:
         if market_data is None:
             raise ValueError("market_data is required; load history before running the engine")
 
+        market_data, identity_unusable = apply_identity(market_data, self._security_master)
         trading_dates, bars_by_date = _build_calendar(market_data, start_date, end_date)
         warmup = self._warmup_sessions()
         rebalance_dates = _monthly_rebalance_dates(trading_dates, warmup)
@@ -74,6 +83,12 @@ class BacktestEngine:
         universe_member_symbols: set[str] = set()
         insufficient_history_symbols: set[str] = set()
         rebalance_diagnostics: list[RebalanceDiagnostics] = []
+        unusable = classify_unusable_symbols(market_data)
+        unusable.update(identity_unusable)
+        unusable_set = set(unusable)
+        last_bar_dates = _last_bar_dates(market_data)
+        warned_unvalued: set[str] = set()
+        unvalued_symbols: set[str] = set()
         if is_current_universe(self._config.universe_kind):
             warnings.append(CURRENT_UNIVERSE_WARNING)
         if not trading_dates:
@@ -98,8 +113,16 @@ class BacktestEngine:
 
         for session in trading_dates:
             day_bars = bars_by_date[session]
-            opens = {symbol: bar.open for symbol, bar in day_bars.items()}
-            closes = {symbol: bar.close for symbol, bar in day_bars.items()}
+            opens = {
+                symbol: bar.open
+                for symbol, bar in day_bars.items()
+                if symbol not in unusable_set
+            }
+            closes = {
+                symbol: bar.close
+                for symbol, bar in day_bars.items()
+                if symbol not in unusable_set
+            }
             session_time = _session_timestamp(session, day_bars)
 
             if pending_target is not None:
@@ -109,7 +132,12 @@ class BacktestEngine:
                     logger.warning(message)
                     warnings.append(message)
                 self._broker.set_market_prices(opens, session_time)
-                self._broker.mark_to_market(opens)
+                ended_at_open = _ended_position_symbols(
+                    self._broker.get_positions(),
+                    session,
+                    last_bar_dates,
+                )
+                self._broker.mark_to_market(opens, unvalued=ended_at_open)
                 orders = self._order_service.create_orders_from_targets(
                     self._broker.get_account(),
                     pending_target,
@@ -122,13 +150,18 @@ class BacktestEngine:
                     if self._risk_manager.validate(order, account):
                         submitted.append(self._broker.submit_order(order))
                     else:
-                        submitted.append(order)
+                        submitted.append(replace(order, status=OrderStatus.REJECTED))
                 pending_target = None
 
-            self._broker.mark_to_market(closes)
-            marked = _mark_missing_closes(self._broker, closes, session, warnings)
-            if marked:
-                self._broker.mark_to_market(marked)
+            _apply_close_marks(
+                self._broker,
+                closes,
+                session,
+                last_bar_dates,
+                warnings,
+                warned_unvalued,
+                unvalued_symbols,
+            )
 
             account = self._broker.get_account()
             equity = account.equity
@@ -151,10 +184,11 @@ class BacktestEngine:
             previous_equity = equity
 
             if session in rebalance_dates:
-                signal_data, missing, eligible = _universe_market_data(
+                signal_data, missing, eligible, unusable_members = _universe_market_data(
                     market_data,
                     session,
                     self._universe_provider,
+                    unusable_set,
                 )
                 universe_members = len(eligible)
                 universe_member_symbols.update(eligible)
@@ -178,6 +212,7 @@ class BacktestEngine:
                         as_of=session,
                         universe_members=universe_members,
                         missing_market_data=len(missing),
+                        unusable_market_data=len(unusable_members),
                         insufficient_history=counts.insufficient_history,
                         failed_price_filter=counts.failed_price_filter,
                         failed_liquidity_filter=counts.failed_liquidity_filter,
@@ -186,13 +221,20 @@ class BacktestEngine:
                     )
                 )
                 logger.info(
-                    "Rebalance queued as_of=%s members=%s missing=%s eligible=%s selected=%s",
+                    "Rebalance queued as_of=%s members=%s missing=%s unusable=%s eligible=%s selected=%s",
                     session.isoformat(),
                     universe_members,
                     len(missing),
+                    len(unusable_members),
                     counts.momentum_eligible,
                     len(signals),
                 )
+
+        if pending_target is not None:
+            warnings.append(
+                "Final rebalance was not executed: no subsequent trading session "
+                "for next-open fills."
+            )
 
         metrics = self._metrics.calculate(
             equity_curve,
@@ -205,9 +247,17 @@ class BacktestEngine:
         spy_return = _spy_buy_hold_return(bars_by_date, trading_dates)
         fills = self._broker.get_fills()
         warnings.extend(_summarize_missing_market_data(missing_by_rebalance, market_data))
+        member_unusable = {
+            symbol: reason
+            for symbol, reason in unusable.items()
+            if not universe_member_symbols or symbol in universe_member_symbols
+        }
+        warnings.extend(_unusable_price_warnings(member_unusable))
         priced_set = {symbol for symbol, bars in market_data.items() if bars}
         priced_symbols = tuple(sorted(priced_set))
         missing_price_count = len({symbol for _as_of, missing in missing_by_rebalance for symbol in missing})
+        unusable_symbol_tuple = tuple(sorted(member_unusable))
+        unusable_price_count = len(unusable_symbol_tuple)
         universe_member_peak = max(universe_sizes) if universe_sizes else None
         last_diag = rebalance_diagnostics[-1] if rebalance_diagnostics else None
         coverage_warning = None
@@ -215,18 +265,29 @@ class BacktestEngine:
             coverage_warning = historical_market_data_coverage_warning(missing_price_count)
             if coverage_warning:
                 warnings.append(coverage_warning)
+            unusable_warning = historical_unusable_market_data_warning(unusable_price_count)
+            if unusable_warning:
+                warnings.append(unusable_warning)
         member_count = len(universe_member_symbols) if universe_member_symbols else len(market_data)
         member_priced = priced_set & universe_member_symbols if universe_member_symbols else priced_set
+        unusable_member_set = set(unusable_symbol_tuple)
         coverage = DataCoverageSnapshot(
             universe_member_peak=universe_member_peak,
             universe_members=member_count,
-            market_data_available=len(member_priced - insufficient_history_symbols),
+            market_data_available=len(member_priced - insufficient_history_symbols - unusable_member_set),
             missing_market_data=missing_price_count,
+            unusable_market_data=unusable_price_count,
             insufficient_history=len(insufficient_history_symbols),
             momentum_eligible=last_diag.momentum_eligible if last_diag else 0,
             selected=last_diag.selected if last_diag else 0,
             warning=coverage_warning,
         )
+        remaining_unvalued = {
+            position.symbol
+            for position in self._broker.get_positions()
+            if not position.valued
+        }
+        unvalued_symbols.update(remaining_unvalued)
 
         return BacktestResult(
             start_date=start_date,
@@ -254,6 +315,8 @@ class BacktestEngine:
             universe_kind=self._config.universe_kind,
             rebalance_diagnostics=tuple(rebalance_diagnostics),
             coverage=coverage,
+            unusable_symbols=unusable_symbol_tuple,
+            unvalued_symbols=tuple(sorted(unvalued_symbols)),
         )
 
     def _warmup_sessions(self) -> int:
@@ -268,18 +331,39 @@ def _universe_market_data(
     market_data: Mapping[str, Sequence[MarketBar]],
     as_of: date,
     universe_provider: UniverseProvider | None,
-) -> tuple[Mapping[str, Sequence[MarketBar]], list[str], list[str]]:
+    unusable: set[str],
+) -> tuple[Mapping[str, Sequence[MarketBar]], list[str], list[str], list[str]]:
     if universe_provider is None:
         eligible = sorted(market_data)
     else:
         eligible = universe_provider.get_symbols(as_of)
     missing = missing_market_data_symbols(eligible, market_data)
+    unusable_members = sorted(
+        symbol
+        for symbol in eligible
+        if symbol in unusable and market_data.get(symbol)
+    )
     filtered = {
         symbol: bars
         for symbol in eligible
-        if (bars := market_data.get(symbol))
+        if (bars := market_data.get(symbol)) and symbol not in unusable
     }
-    return filtered, missing, eligible
+    return filtered, missing, eligible, unusable_members
+
+
+def _unusable_price_warnings(unusable: Mapping[str, str]) -> list[str]:
+    if not unusable:
+        return []
+    preview = ", ".join(sorted(unusable)[:20])
+    reasons = sorted(set(unusable.values()))
+    reason_text = ", ".join(reasons)
+    return [
+        "Unusable price series: "
+        f"{len(unusable)} symbol(s) failed price-quality or security-identity validation "
+        f"(reason={reason_text}; possible ticker identity mismatch). "
+        "Series cannot fill; PIT membership was not dropped. "
+        f"Sample: {preview}."
+    ]
 
 
 def _summarize_missing_market_data(
@@ -312,12 +396,12 @@ def _build_calendar(
     end: date,
 ) -> tuple[list[date], dict[date, dict[str, MarketBar]]]:
     bars_by_date: dict[date, dict[str, MarketBar]] = {}
-    for bars in market_data.values():
+    for symbol, bars in market_data.items():
         for bar in bars:
             session = bar.timestamp.date()
             if session < start or session > end:
                 continue
-            bars_by_date.setdefault(session, {})[bar.symbol] = bar
+            bars_by_date.setdefault(session, {})[symbol] = bar
     return sorted(bars_by_date), bars_by_date
 
 
@@ -342,6 +426,28 @@ def _session_timestamp(session: date, day_bars: Mapping[str, MarketBar]) -> date
     return datetime.combine(session, time(9, 30), tzinfo=UTC)
 
 
+def _last_bar_dates(market_data: Mapping[str, Sequence[MarketBar]]) -> dict[str, date]:
+    last_dates: dict[str, date] = {}
+    for symbol, bars in market_data.items():
+        if not bars:
+            continue
+        last_dates[symbol] = max(bar.timestamp.date() for bar in bars)
+    return last_dates
+
+
+def _ended_position_symbols(
+    positions: Sequence[Position],
+    session: date,
+    last_bar_dates: Mapping[str, date],
+) -> set[str]:
+    ended: set[str] = set()
+    for position in positions:
+        last = last_bar_dates.get(position.symbol)
+        if last is None or last < session:
+            ended.add(position.symbol)
+    return ended
+
+
 def _missing_execution_symbols(
     target: TargetPortfolio,
     positions: Sequence[Position],
@@ -352,25 +458,42 @@ def _missing_execution_symbols(
     return sorted(symbol for symbol in needed if symbol not in opens)
 
 
-def _mark_missing_closes(
+def _apply_close_marks(
     broker: BacktestBroker,
     closes: Mapping[str, Decimal],
     session: date,
+    last_bar_dates: Mapping[str, date],
     warnings: list[str],
-) -> dict[str, Decimal] | None:
+    warned_unvalued: set[str],
+    unvalued_symbols: set[str],
+) -> None:
     merged = dict(closes)
-    missing = False
+    unvalued: set[str] = set()
     for position in broker.get_positions():
-        if position.symbol not in merged:
-            message = (
-                f"missing close for mark-to-market symbol={position.symbol} "
-                f"date={session.isoformat()}; holding last price"
-            )
-            logger.warning(message)
-            warnings.append(message)
-            merged[position.symbol] = position.market_price
-            missing = True
-    return merged if missing else None
+        if position.symbol in merged:
+            continue
+        last = last_bar_dates.get(position.symbol)
+        if last is None or last < session:
+            unvalued.add(position.symbol)
+            unvalued_symbols.add(position.symbol)
+            if position.symbol not in warned_unvalued:
+                message = (
+                    f"price series ended; position left unvalued "
+                    f"(not marked at last price) symbol={position.symbol} "
+                    f"date={session.isoformat()}"
+                )
+                logger.warning(message)
+                warnings.append(message)
+                warned_unvalued.add(position.symbol)
+            continue
+        message = (
+            f"missing close for mark-to-market symbol={position.symbol} "
+            f"date={session.isoformat()}; holding last price"
+        )
+        logger.warning(message)
+        warnings.append(message)
+        merged[position.symbol] = position.market_price
+    broker.mark_to_market(merged, unvalued=unvalued)
 
 
 def _spy_buy_hold_return(

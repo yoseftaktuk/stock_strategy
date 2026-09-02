@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from datetime import datetime
 from decimal import Decimal
 
@@ -47,5 +47,10 @@ class IBKRBroker:
     ) -> None:
         raise NotImplementedError("IBKR integration not implemented")
 
-    def mark_to_market(self, prices: Mapping[str, Decimal]) -> None:
+    def mark_to_market(
+        self,
+        prices: Mapping[str, Decimal],
+        *,
+        unvalued: Collection[str] = frozenset(),
+    ) -> None:
         raise NotImplementedError("IBKR integration not implemented")

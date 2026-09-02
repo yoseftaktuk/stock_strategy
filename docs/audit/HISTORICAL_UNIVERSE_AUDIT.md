@@ -181,7 +181,7 @@ one-time snapshot at backtest start. Orders execute at the **next session open**
 
 ## 12. Trade accounting
 
-There is **no** Trade domain or table. UI metric **Trades** =
+There is **no** Trade domain or table. UI metric **Fills** =
 `BacktestResult.number_of_trades` = `len(fills)`.
 
 `winning_trades` / `losing_trades` increment only on **SELL** vs average cost
@@ -218,13 +218,14 @@ Commission` — fills, not round-trips, and **without side**.
 
 | File | Rows | Meaning |
 |------|------|---------|
-| `fills.csv` | Successful executions | Join to orders for `side`; includes `order_id`, `gross_value`, `commission`, `slippage`, `net_value`, optional `cash` / `position_quantity` |
+| `fills.csv` | Successful executions | Join to orders for `side`; includes `market_price`, `fill_price`, `order_id`, `gross_value`, `commission`, `slippage`, `portfolio_value`, `cash`, `position_quantity` |
 | `orders.csv` | All generated orders | Includes rejected / unsubmitted; has `side` and `status` |
+| `equity_curve.csv` | Daily valuation | `date`, `equity`, `cash`, `returns`, `drawdown` from `result.equity_curve` |
 
-There is no `trades.csv` because there is no Trade type. **Trades = fills.**
+There is no `trades.csv` because there is no Trade type. **Fills = successful executions.** Market-data CSVs under `data/raw/` remain OHLCV and are not execution exports.
 
 CLI `scripts/run_backtest.py --export-dir DIR` writes those files.
-Streamlit offers the same downloads from session state.
+Streamlit offers the same downloads from session state, reusing `app/backtest/export.py`.
 
 Optional universe audit CSVs (off by default for the detail file):
 
@@ -244,12 +245,12 @@ runs.
 | UI metric | Source |
 |-----------|--------|
 | Total Return | `result.total_return` (`final_equity / initial_capital - 1`) |
-| Trades | `result.number_of_trades` (`len(fills)`) |
+| Fills | `result.number_of_trades` (`len(fills)`) |
 | Commission | `result.total_commission` |
 | Slippage | `result.total_slippage` |
 | Coverage / diagnostics | `result.coverage`, `result.rebalance_diagnostics` |
 
-The Trades table is the fills table (now including Side and Order ID). Positions
+The Fills table is the fills table (Side from Order; Market Price and Fill Price from Fill). Positions
 are not shown as a separate live blotter; equity/cash come from `equity_curve`.
 
 ---

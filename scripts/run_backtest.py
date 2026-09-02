@@ -57,7 +57,7 @@ def parse_args() -> argparse.Namespace:
         "--export-dir",
         type=Path,
         default=None,
-        help="Write fills.csv and orders.csv into this directory.",
+        help="Write fills.csv, orders.csv, and equity_curve.csv into this directory.",
     )
     parser.add_argument(
         "--universe-audit",
@@ -92,10 +92,16 @@ def main() -> None:
         logging.error("%s", exc)
         raise SystemExit(1) from exc
     print(result.format_report(verbose=args.verbose))
+    print()
+    print(result.format_data_quality_report())
     if args.export_dir is not None:
-        fills_path, orders_path = write_backtest_export(args.export_dir, result)
+        fills_path, orders_path, equity_path = write_backtest_export(args.export_dir, result)
+        quality_path = args.export_dir / "data_quality.txt"
+        quality_path.write_text(result.format_data_quality_report(), encoding="utf-8")
         print(f"Wrote {fills_path}")
         print(f"Wrote {orders_path}")
+        print(f"Wrote {equity_path}")
+        print(f"Wrote {quality_path}")
     if args.universe_audit or args.universe_audit_detail:
         _write_universe_audit(args, result)
 

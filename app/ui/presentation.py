@@ -19,8 +19,11 @@ def summary_table(result: BacktestResult) -> pd.DataFrame:
         {"Metric": "Volatility", "Value": _pct(result.volatility)},
         {"Metric": "Sharpe", "Value": f"{result.sharpe_ratio:.2f}"},
         {"Metric": "Max Drawdown", "Value": _pct(result.max_drawdown)},
-        {"Metric": "Trades", "Value": str(result.number_of_trades)},
-        {"Metric": "Winning / Losing", "Value": f"{result.winning_trades} / {result.losing_trades}"},
+        {"Metric": "Fills", "Value": str(result.number_of_trades)},
+        {
+            "Metric": "Winning / Losing sells",
+            "Value": f"{result.winning_trades} / {result.losing_trades}",
+        },
         {"Metric": "Commission", "Value": _money(result.total_commission)},
         {"Metric": "Slippage", "Value": _money(result.total_slippage)},
     ]
@@ -34,6 +37,7 @@ def summary_table(result: BacktestResult) -> pd.DataFrame:
             rows.append({"Metric": "Unique constituents", "Value": str(snapshot.universe_members)})
         rows.append({"Metric": "Market Data Available", "Value": str(snapshot.market_data_available)})
         rows.append({"Metric": "Missing Market Data", "Value": str(snapshot.missing_market_data)})
+        rows.append({"Metric": "Unusable Market Data", "Value": str(snapshot.unusable_market_data)})
         rows.append({"Metric": "Insufficient History", "Value": str(snapshot.insufficient_history)})
         rows.append({"Metric": "Momentum Eligible", "Value": str(snapshot.momentum_eligible)})
         rows.append({"Metric": "Selected", "Value": str(snapshot.selected)})
@@ -44,6 +48,11 @@ def summary_table(result: BacktestResult) -> pd.DataFrame:
         if result.universe_member_peak is not None:
             rows.append({"Metric": "PIT universe (peak)", "Value": str(result.universe_member_peak)})
             rows.append({"Metric": "Missing prices", "Value": str(result.missing_price_count)})
+    if result.unusable_symbols:
+        preview = ", ".join(result.unusable_symbols[:20])
+        rows.append({"Metric": "Unusable symbols", "Value": preview})
+    if result.unvalued_symbols:
+        rows.append({"Metric": "Unvalued residual positions", "Value": ", ".join(result.unvalued_symbols)})
     if result.spy_buy_hold_return is not None:
         rows.append({"Metric": "SPY Buy & Hold", "Value": _pct(result.spy_buy_hold_return)})
     return pd.DataFrame(rows)
@@ -77,7 +86,8 @@ def fills_table(result: BacktestResult) -> pd.DataFrame:
                     else ""
                 ),
                 "Quantity": float(fill.quantity),
-                "Price": float(fill.price),
+                "Market Price": float(fill.market_price) if fill.market_price is not None else None,
+                "Fill Price": float(fill.price),
                 "Commission": float(fill.commission),
                 "Slippage": float(fill.slippage),
                 "Order ID": fill.order_id,
@@ -94,6 +104,7 @@ def rebalance_diagnostics_table(result: BacktestResult) -> pd.DataFrame:
                 "Rebalance": row.as_of.isoformat(),
                 "Universe Members": row.universe_members,
                 "Missing Market Data": row.missing_market_data,
+                "Unusable Market Data": row.unusable_market_data,
                 "Insufficient History": row.insufficient_history,
                 "Failed Price Filter": row.failed_price_filter,
                 "Failed Liquidity Filter": row.failed_liquidity_filter,
@@ -119,11 +130,16 @@ def coverage_table(result: BacktestResult) -> pd.DataFrame:
         [
             {"Metric": "Market Data Available", "Value": str(snapshot.market_data_available)},
             {"Metric": "Missing Market Data", "Value": str(snapshot.missing_market_data)},
+            {"Metric": "Unusable Market Data", "Value": str(snapshot.unusable_market_data)},
             {"Metric": "Insufficient History", "Value": str(snapshot.insufficient_history)},
             {"Metric": "Momentum Eligible", "Value": str(snapshot.momentum_eligible)},
             {"Metric": "Selected", "Value": str(snapshot.selected)},
         ]
     )
+    if result.unusable_symbols:
+        rows.append({"Metric": "Unusable symbols", "Value": ", ".join(result.unusable_symbols[:20])})
+    if result.unvalued_symbols:
+        rows.append({"Metric": "Unvalued residual positions", "Value": ", ".join(result.unvalued_symbols)})
     return pd.DataFrame(rows)
 
 

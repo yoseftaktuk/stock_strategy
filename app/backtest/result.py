@@ -10,6 +10,7 @@ from app.backtest.diagnostics import (
     is_current_universe,
     universe_display_name,
 )
+from app.domain.enums import OrderStatus
 from app.domain.models.equity import EquityPoint
 from app.domain.models.fill import Fill
 from app.domain.models.order import Order
@@ -42,6 +43,8 @@ class BacktestResult:
     universe_kind: str | None = None
     rebalance_diagnostics: tuple[RebalanceDiagnostics, ...] = field(default_factory=tuple)
     coverage: DataCoverageSnapshot | None = None
+    unusable_symbols: tuple[str, ...] = field(default_factory=tuple)
+    unvalued_symbols: tuple[str, ...] = field(default_factory=tuple)
 
     @property
     def universe_label(self) -> str:
@@ -67,6 +70,7 @@ class BacktestResult:
                 f"\nUnique constituents:\n{snapshot.universe_members}"
                 f"\nMarket Data Available:\n{snapshot.market_data_available}"
                 f"\nMissing Market Data:\n{snapshot.missing_market_data}"
+                f"\nUnusable Market Data:\n{snapshot.unusable_market_data}"
                 f"\nInsufficient History:\n{snapshot.insufficient_history}"
                 f"\nMomentum Eligible:\n{snapshot.momentum_eligible}"
                 f"\nSelected:\n{snapshot.selected}"
@@ -110,7 +114,7 @@ class BacktestResult:
             f"{self.sharpe_ratio:.2f}\n"
             "Max Drawdown:\n"
             f"{self.max_drawdown * 100:.2f}%\n"
-            "Trades:\n"
+            "Fills:\n"
             f"{self.number_of_trades}\n"
             "Commission:\n"
             f"${self.total_commission:,.2f}\n"
@@ -122,3 +126,53 @@ class BacktestResult:
             f"{diagnostics_block}\n"
             "========================================"
         )
+
+    def format_data_quality_report(self) -> str:
+        snapshot = self.coverage
+        rejected = sum(1 for order in self.orders if order.status == OrderStatus.REJECTED)
+        unusable_fills = sorted({fill.symbol for fill in self.fills if fill.symbol in set(self.unusable_symbols)})
+        stale_mtm = self._stale_mtm_after_series_end()
+        stuck = tuple(self.unvalued_symbols)
+        if stuck or unusable_fills or stale_mtm:
+            status = "DATA_QUALITY_INCOMPLETE"
+        elif (snapshot is not None and snapshot.missing_market_data > 0) or self.unusable_symbols:
+            status = "DATA_QUALITY_INCOMPLETE"
+        else:
+            status = "COMPLETE"
+        peak = snapshot.universe_member_peak if snapshot is not None else self.universe_member_peak
+        members = snapshot.universe_members if snapshot is not None else 0
+        missing = snapshot.missing_market_data if snapshot is not None else self.missing_price_count
+        unusable_count = snapshot.unusable_market_data if snapshot is not None else len(self.unusable_symbols)
+        unusable_list = ", ".join(self.unusable_symbols) if self.unusable_symbols else "none"
+        stuck_list = ", ".join(stuck) if stuck else "none"
+        fill_list = ", ".join(unusable_fills) if unusable_fills else "none"
+        warning_text = "\n".join(self.warnings) if self.warnings else "none"
+        return (
+            "DATA QUALITY VALIDATION\n"
+            f"Period: {self.start_date.isoformat()} → {self.end_date.isoformat()}\n"
+            f"Universe: {self.universe_label}\n"
+            f"PIT members encountered: {members}\n"
+            f"PIT universe peak: {peak}\n"
+            f"Missing price data: {missing}\n"
+            f"Unusable price series: {unusable_count}\n"
+            f"Unusable symbols: {unusable_list}\n"
+            f"Fills involving unusable symbols: {fill_list}\n"
+            f"Orders: {len(self.orders)}\n"
+            f"Fills: {self.number_of_trades}\n"
+            f"Rejected orders: {rejected}\n"
+            f"Stuck unvalued positions: {stuck_list}\n"
+            f"Stale last-price MTM after series end: {'yes' if stale_mtm else 'no'}\n"
+            f"Final status: {status}\n"
+            "Research readiness: NOT READY\n"
+            f"Warnings:\n{warning_text}\n"
+        )
+
+    def _stale_mtm_after_series_end(self) -> bool:
+        if not self.unvalued_symbols:
+            return False
+        for warning in self.warnings:
+            if "holding last price" not in warning:
+                continue
+            if any(f"symbol={symbol}" in warning for symbol in self.unvalued_symbols):
+                return True
+        return False

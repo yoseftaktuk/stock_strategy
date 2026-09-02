@@ -165,6 +165,24 @@ python scripts/run_backtest.py --start 2015-01-01 --end 2025-12-31 --capital 100
 
 `--universe current` is allowed for comparison but is marked **survivorship-biased** for historical windows. `--verbose` prints per-rebalance diagnostics (universe members, missing prices, insufficient history, filters, selected). Do not treat a full S&P 500 run as valid research until historical prices exist for the point-in-time members.
 
+### Execution export versus market-data CSV
+
+`data/raw/{SYMBOL}.csv` is **market data** (OHLCV), not trades:
+
+```
+symbol,timestamp,open,high,low,close,adjusted_close,volume
+```
+
+Backtest execution is a separate export (`--export-dir DIR` or Streamlit download buttons), produced by `app/backtest/export.py` from `BacktestResult`:
+
+| File | Meaning |
+|------|---------|
+| `fills.csv` | Successful executions (fill count is `number_of_trades`) |
+| `orders.csv` | Order intents, including rejected orders |
+| `equity_curve.csv` | Daily cash / equity / return / drawdown |
+
+There is no Trade domain type. Fills are not written into the market-data CSV cache.
+
 ## Point-in-Time Universe
 
 The universe layer answers **which securities were eligible index members** on a date. Market data answers **what prices exist**. A name can be a historical constituent with no local prices; that is valid and must be reported, not dropped from the universe.

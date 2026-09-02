@@ -16,6 +16,8 @@ class Fill:
     slippage: Decimal = Decimal("0")
     cash: Decimal | None = None
     position_quantity: Decimal | None = None
+    market_price: Decimal | None = None
+    portfolio_value: Decimal | None = None
 
     def __post_init__(self) -> None:
         if not self.order_id.strip():
@@ -34,5 +36,9 @@ class Fill:
             raise DomainValidationError("cash must be non-negative")
         if self.position_quantity is not None and self.position_quantity < 0:
             raise DomainValidationError("position_quantity must be non-negative")
+        if self.market_price is not None and self.market_price < 0:
+            raise DomainValidationError("market_price must be non-negative")
+        if self.portfolio_value is not None and self.portfolio_value < 0:
+            raise DomainValidationError("portfolio_value must be non-negative")
         if self.timestamp.tzinfo is None or self.timestamp.tzinfo.utcoffset(self.timestamp) is None:
             raise DomainValidationError("timestamp must be timezone-aware")

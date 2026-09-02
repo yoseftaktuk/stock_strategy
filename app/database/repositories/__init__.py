@@ -4,12 +4,14 @@ from app.database.repositories.interfaces import (
     MarketDataRepository,
     OrderRepository,
     PortfolioRepository,
+    SecurityMasterRepository,
     SignalRepository,
     SP500ConstituentRepository,
 )
 from app.database.repositories.market_data import PostgresMarketDataRepository
 from app.database.repositories.orders import PostgresOrderRepository
 from app.database.repositories.portfolio import PostgresPortfolioRepository
+from app.database.repositories.security_master import PostgresSecurityMasterRepository
 from app.database.repositories.signals import PostgresSignalRepository
 from app.database.repositories.sp500_constituents import PostgresSP500ConstituentRepository
 
@@ -22,21 +24,10 @@ __all__ = [
     "PostgresMarketDataRepository",
     "PostgresOrderRepository",
     "PostgresPortfolioRepository",
-    "PostgresSP500ConstituentRepository",
+    "PostgresSecurityMasterRepository",
     "PostgresSignalRepository",
+    "PostgresSP500ConstituentRepository",
+    "SecurityMasterRepository",
     "SignalRepository",
     "SP500ConstituentRepository",
-]
-
-__all__ = [
-    "FillRepository",
-    "MarketDataRepository",
-    "OrderRepository",
-    "PortfolioRepository",
-    "PostgresFillRepository",
-    "PostgresMarketDataRepository",
-    "PostgresOrderRepository",
-    "PostgresPortfolioRepository",
-    "PostgresSignalRepository",
-    "SignalRepository",
 ]

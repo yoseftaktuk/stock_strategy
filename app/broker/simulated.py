@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import replace
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -52,11 +52,19 @@ class SimulatedBroker:
         self._market_prices = dict(prices)
         self._session_time = session_time
 
-    def mark_to_market(self, prices: Mapping[str, Decimal]) -> None:
+    def mark_to_market(
+        self,
+        prices: Mapping[str, Decimal],
+        *,
+        unvalued: Collection[str] = frozenset(),
+    ) -> None:
         updated: dict[str, Position] = {}
         for symbol, position in self._positions.items():
+            if symbol in unvalued:
+                updated[symbol] = replace(position, valued=False)
+                continue
             market_price = prices.get(symbol, position.market_price)
-            updated[symbol] = replace(position, market_price=market_price)
+            updated[symbol] = replace(position, market_price=market_price, valued=True)
         self._positions = updated
 
     def get_account(self) -> Portfolio:
@@ -202,6 +210,7 @@ class SimulatedBroker:
         slippage = abs(fill_price - market_price) * order.quantity
         position = self._positions.get(order.symbol)
         position_quantity = position.quantity if position is not None else Decimal("0")
+        account = self.get_account()
         fill = Fill(
             order_id=order.client_order_id,
             symbol=order.symbol,
@@ -212,6 +221,8 @@ class SimulatedBroker:
             slippage=slippage,
             cash=self._cash,
             position_quantity=position_quantity,
+            market_price=market_price,
+            portfolio_value=account.equity,
         )
         self._fills.append(fill)
         self._total_commission += commission

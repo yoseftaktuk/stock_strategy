@@ -13,6 +13,19 @@ def test_position_market_value() -> None:
 
 
 @pytest.mark.unit
+def test_unvalued_position_excludes_market_value() -> None:
+    position = Position(
+        symbol="AAPL",
+        quantity=Decimal("10"),
+        average_price=Decimal("150.00"),
+        market_price=Decimal("154.00"),
+        valued=False,
+    )
+    assert position.market_value == Decimal("0")
+    assert position.market_price == Decimal("154.00")
+
+
+@pytest.mark.unit
 def test_position_rejects_negative_quantity() -> None:
     with pytest.raises(DomainValidationError, match="quantity must be non-negative"):
         Position(

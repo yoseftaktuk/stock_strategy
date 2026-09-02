@@ -15,7 +15,7 @@ from app.risk.risk_manager import RiskManager
 from app.strategy.base import Strategy
 from app.universe.memory import InMemoryUniverseProvider
 from tests.fixtures.momentum import make_series
-from tests.fixtures.universe import survivorship_memberships
+from tests.fixtures.universe import membership, survivorship_memberships
 
 START = date(2015, 1, 2)
 END = date(2015, 3, 31)
@@ -89,3 +89,29 @@ def test_engine_without_provider_keeps_loaded_symbols() -> None:
     assert strategy.seen
     for _as_of, symbols in strategy.seen:
         assert symbols == ("AAA", "ZZZ")
+
+
+@pytest.mark.backtest
+def test_universe_as_of_is_signal_date_not_execution_date() -> None:
+    """A name that becomes a member on the execution date must not be in the signal universe."""
+    signal_date = date(2015, 2, 1)
+    execution_date = date(2015, 2, 2)
+    provider = InMemoryUniverseProvider(
+        (
+            membership("AAA", date(2010, 1, 1)),
+            membership("NEW", execution_date),
+        )
+    )
+    market_data = {
+        "AAA": make_series("AAA", 60, start=START, close=Decimal("50")),
+        "NEW": make_series("NEW", 60, start=START, close=Decimal("50")),
+    }
+    strategy = RecordingStrategy()
+    engine = _engine(strategy, provider)
+    engine.run(START, END, market_data=market_data)
+    seen_on_signal = [symbols for as_of, symbols in strategy.seen if as_of == signal_date]
+    assert seen_on_signal
+    assert "NEW" not in seen_on_signal[0]
+    assert "AAA" in seen_on_signal[0]
+    seen_on_execution_month = [symbols for as_of, symbols in strategy.seen if as_of >= execution_date]
+    assert any("NEW" in symbols for symbols in seen_on_execution_month)

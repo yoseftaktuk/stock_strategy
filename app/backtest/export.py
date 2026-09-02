@@ -1,7 +1,12 @@
-"""Backtest result CSV exporters.
+"""Backtest execution CSV exporters.
 
-Fills and orders are written as separate files. There is no Trade type; the UI
-metric Trades equals the fill count.
+Market-data CSVs under data/raw/ are OHLCV only. These files are independent:
+
+- fills.csv — successful executions (not a Trade type)
+- orders.csv — order intents, including rejected orders
+- equity_curve.csv — portfolio valuation history
+
+There is no Trade type. BacktestResult.number_of_trades equals the fill count.
 """
 
 from __future__ import annotations
@@ -13,7 +18,6 @@ from decimal import Decimal
 from pathlib import Path
 
 from app.backtest.result import BacktestResult
-from app.domain.enums import OrderSide
 from app.domain.models.fill import Fill
 from app.domain.models.order import Order
 
@@ -22,12 +26,13 @@ FILLS_FIELDS = (
     "symbol",
     "side",
     "quantity",
-    "price",
+    "market_price",
+    "fill_price",
     "gross_value",
     "commission",
     "slippage",
-    "net_value",
     "order_id",
+    "portfolio_value",
     "cash",
     "position_quantity",
 )
@@ -40,6 +45,13 @@ ORDERS_FIELDS = (
     "status",
     "limit_price",
 )
+EQUITY_FIELDS = (
+    "date",
+    "equity",
+    "cash",
+    "returns",
+    "drawdown",
+)
 
 
 def fills_rows(result: BacktestResult) -> list[dict[str, str]]:
@@ -50,22 +62,20 @@ def fills_rows(result: BacktestResult) -> list[dict[str, str]]:
 def fill_row(fill: Fill, order: Order | None) -> dict[str, str]:
     side = order.side if order is not None else None
     gross = fill.quantity * fill.price
-    net = _net_value(side, gross, fill.commission)
     return {
         "timestamp": fill.timestamp.isoformat(),
         "symbol": fill.symbol,
         "side": side.value if side is not None else "",
         "quantity": _decimal(fill.quantity),
-        "price": _decimal(fill.price),
+        "market_price": _optional_decimal(fill.market_price),
+        "fill_price": _decimal(fill.price),
         "gross_value": _decimal(gross),
         "commission": _decimal(fill.commission),
         "slippage": _decimal(fill.slippage),
-        "net_value": _decimal(net) if net is not None else "",
         "order_id": fill.order_id,
-        "cash": _decimal(fill.cash) if fill.cash is not None else "",
-        "position_quantity": (
-            _decimal(fill.position_quantity) if fill.position_quantity is not None else ""
-        ),
+        "portfolio_value": _optional_decimal(fill.portfolio_value),
+        "cash": _optional_decimal(fill.cash),
+        "position_quantity": _optional_decimal(fill.position_quantity),
     }
 
 
@@ -84,12 +94,29 @@ def orders_rows(result: BacktestResult) -> list[dict[str, str]]:
     ]
 
 
+def equity_rows(result: BacktestResult) -> list[dict[str, str]]:
+    return [
+        {
+            "date": point.date.isoformat(),
+            "equity": _decimal(point.equity),
+            "cash": _decimal(point.cash),
+            "returns": _decimal(point.returns),
+            "drawdown": _decimal(point.drawdown),
+        }
+        for point in result.equity_curve
+    ]
+
+
 def fills_csv_text(result: BacktestResult) -> str:
     return _csv_text(FILLS_FIELDS, fills_rows(result))
 
 
 def orders_csv_text(result: BacktestResult) -> str:
     return _csv_text(ORDERS_FIELDS, orders_rows(result))
+
+
+def equity_csv_text(result: BacktestResult) -> str:
+    return _csv_text(EQUITY_FIELDS, equity_rows(result))
 
 
 def write_fills_csv(path: Path, result: BacktestResult) -> None:
@@ -100,30 +127,32 @@ def write_orders_csv(path: Path, result: BacktestResult) -> None:
     _write_csv(path, ORDERS_FIELDS, orders_rows(result))
 
 
-def write_backtest_export(directory: Path, result: BacktestResult) -> tuple[Path, Path]:
+def write_equity_csv(path: Path, result: BacktestResult) -> None:
+    _write_csv(path, EQUITY_FIELDS, equity_rows(result))
+
+
+def write_backtest_export(directory: Path, result: BacktestResult) -> tuple[Path, Path, Path]:
     directory.mkdir(parents=True, exist_ok=True)
     fills_path = directory / "fills.csv"
     orders_path = directory / "orders.csv"
+    equity_path = directory / "equity_curve.csv"
     write_fills_csv(fills_path, result)
     write_orders_csv(orders_path, result)
-    return fills_path, orders_path
-
-
-def _net_value(side: OrderSide | None, gross: Decimal, commission: Decimal) -> Decimal | None:
-    if side is None:
-        return None
-    if side == OrderSide.BUY:
-        return -(gross + commission)
-    return gross - commission
+    write_equity_csv(equity_path, result)
+    return fills_path, orders_path, equity_path
 
 
 def _decimal(value: Decimal) -> str:
     return format(value, "f")
 
 
+def _optional_decimal(value: Decimal | None) -> str:
+    return _decimal(value) if value is not None else ""
+
+
 def _csv_text(fields: Sequence[str], rows: Sequence[dict[str, str]]) -> str:
     buffer = io.StringIO()
-    writer = csv.DictWriter(buffer, fieldnames=list(fields))
+    writer = csv.DictWriter(buffer, fieldnames=list(fields), lineterminator="\n")
     writer.writeheader()
     for row in rows:
         writer.writerow(row)
@@ -133,7 +162,7 @@ def _csv_text(fields: Sequence[str], rows: Sequence[dict[str, str]]) -> str:
 def _write_csv(path: Path, fields: Sequence[str], rows: Sequence[dict[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(fields))
+        writer = csv.DictWriter(handle, fieldnames=list(fields), lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
