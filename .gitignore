@@ -51,5 +51,8 @@ data/processed/*
 audit/*.csv
 !audit/.gitkeep
 
+# Platinum staged bars are large; keep mapping/validation summaries
+audit/norgate_platinum_trial/bars/
+
 # Docker volumes
 postgres_data/

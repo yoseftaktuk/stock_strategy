@@ -905,3 +905,18 @@ NOT_TESTABLE. Verdict remains **PROMISING — REQUIRES FULL TRIAL**.
 
 The trial still cannot run on this Mac. PHASE 4 remains IN PROGRESS.
 PHASE 5 remains NOT STARTED. RESEARCH READY remains NO.
+
+---
+
+## Addendum (2026-09-03) — 2-year vendor-validation GO
+
+This addendum does **not** rewrite §§1–14 or the ten answers. Platinum remains
+the recommended **full-history** class.
+
+The current official vendor-validation window is **2024-09-03 → 2025-12-31**
+(observed Trial `first_quoted` ∩ this project's PIT endpoint). Protocol:
+[NORGATE_PLATINUM_TRIAL.md](NORGATE_PLATINUM_TRIAL.md).
+
+A 2-year Vendor Validation Ready pass is **Project Construction GO** only.
+It is not Full Historical Research Ready and does not start Phase 5.
+

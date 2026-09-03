@@ -487,3 +487,20 @@ Until then:
 
 Do not start parameter optimization. Do not run another strategy backtest as
 a Norgate test. Do not integrate Norgate into production.
+
+---
+
+## Addendum (2026-09-03) — 2-year vendor-validation window
+
+The **current official vendor-validation scope** is
+**2024-09-03 → 2025-12-31**, the observed Norgate Trial `first_quoted` overlap
+with this project's PIT endpoint. That change lives in
+[NORGATE_PLATINUM_TRIAL.md](NORGATE_PLATINUM_TRIAL.md).
+
+This document's 2013-07-08 → 2025-12-31 required window remains the **future
+Full Historical Research Ready** gate (Platinum-class delisted tape). It is
+not erased. A 2-year Vendor Validation Ready pass is Project Construction GO
+only. It is not Full Historical Research Ready and does not start Phase 5.
+
+The frozen 37-row sample and live Trial artifacts under `audit/norgate_trial/`
+are unchanged.

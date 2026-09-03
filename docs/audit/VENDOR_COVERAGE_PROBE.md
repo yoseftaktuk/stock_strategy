@@ -26,6 +26,7 @@ Prior research (not erased by this probe):
 Next step (protocol only; trial not executed):
 
 - [NORGATE_TRIAL_PROTOCOL.md](NORGATE_TRIAL_PROTOCOL.md) (rewritten 2026-09-03, 14-section spec; live verdict still **NOT TESTABLE**; schema: [`audit/norgate_trial/`](../../audit/norgate_trial/))
+- Current vendor-validation window (2026-09-03 decision): **2024-09-03 → 2025-12-31**. Executable protocol: [NORGATE_PLATINUM_TRIAL.md](NORGATE_PLATINUM_TRIAL.md). This probe's 2013-07-08 coverage comparison below is **not rewritten**.
 
 Probe date: **2026-09-02**.
 
@@ -314,7 +315,11 @@ accounts in this task. Do not Yahoo-fill HAR / SE / delisted names.
 
 Live-trial procedure (not executed): [NORGATE_TRIAL_PROTOCOL.md](NORGATE_TRIAL_PROTOCOL.md).
 
-**RESEARCH READY: NO**
+**RESEARCH READY: NO** (this 2026-09-02 probe; 2013–2025 coverage unproven)
 
 PHASE 4 — Historical Data Quality: **IN PROGRESS**
 PHASE 5 — Strategy Research: **NOT STARTED**
+
+Current vendor-validation window (2026-09-03 decision): **2024-09-03 → 2025-12-31**.
+See [NORGATE_PLATINUM_TRIAL.md](NORGATE_PLATINUM_TRIAL.md). This probe file and
+`audit/vendor_coverage_probe.*` are not rewritten.
