@@ -16,6 +16,10 @@ import logging
 import sys
 from pathlib import Path
 
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 from app.norgate_trial.bars import bars_from_timeseries, clip_to_occupancy, write_bar_csv
 from app.norgate_trial.client import discover_delisted_suffixes, load_delisted_symbols, price_timeseries
 from app.norgate_trial.constants import OCCUPANCY_CSV_FIELDS

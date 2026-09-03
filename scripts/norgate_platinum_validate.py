@@ -14,6 +14,10 @@ import sys
 from datetime import date
 from pathlib import Path
 
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 from app.norgate_trial.bars import read_bar_csv, validate_staged_bars
 from app.norgate_trial.client import PackageProof, parse_iso_date
 from app.norgate_trial.constants import JOIN_AS_OF_DATES, OCCUPANCY_CSV_FIELDS

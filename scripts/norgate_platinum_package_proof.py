@@ -55,6 +55,34 @@ def _debug_log_import_path() -> None:
 
 
 _debug_log_import_path()
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+# #region agent log
+_post = {
+    "sessionId": "f8992d",
+    "runId": "post-fix",
+    "hypothesisId": "A",
+    "location": "scripts/norgate_platinum_package_proof.py:sys_path_insert",
+    "message": "repo root inserted on sys.path",
+    "timestamp": int(time.time() * 1000),
+    "data": {
+        "sys_path0": sys.path[0] if sys.path else "",
+        "app_in_sys_path": any(Path(item).resolve() == _ROOT for item in sys.path if item),
+        "app_dir_exists": (_ROOT / "app").is_dir(),
+    },
+}
+print(f"DEBUG_IMPORT_PATH_AFTER {json.dumps(_post['data'])}", flush=True)
+for _candidate in (
+    Path("/Users/natankatz/stock_stategy/.cursor/debug-f8992d.log"),
+    _ROOT / ".cursor" / "debug-f8992d.log",
+):
+    try:
+        _candidate.parent.mkdir(parents=True, exist_ok=True)
+        with _candidate.open("a", encoding="utf-8") as _handle:
+            _handle.write(json.dumps(_post) + "\n")
+    except OSError:
+        continue
 # #endregion
 
 from app.norgate_trial.client import (
