@@ -6,9 +6,11 @@ PostgreSQL market_bars, does not replace data/raw CSVs, and does not modify
 Security Master seeds.
 
 If norgatedata and a running NDU are available, queries metadata and bounded
-single-symbol history. Otherwise records NOT TESTABLE IN CURRENT ENVIRONMENT
-and fills documented (not live-proven) vendor capabilities from official
-Norgate documentation.
+single-symbol history for each frozen-sample row: current ticker, and a frozen
+SYMBOL-YYYYMM suffix when the occupancy ended. Does not call database_symbols,
+does not scan US Equities Delisted, and does not write production data.
+Live trial artifacts default to audit/norgate_trial/. Otherwise records
+NOT TESTABLE IN CURRENT ENVIRONMENT from official Norgate documentation.
 """
 
 from __future__ import annotations
@@ -30,6 +32,14 @@ LOGGER = logging.getLogger(__name__)
 
 REQUIRED_START = date(2013, 7, 8)
 REQUIRED_END = date(2025, 12, 31)
+DELISTED_DATABASE_NAME = "US Equities Delisted"
+LISTED_DATABASE_NAME = "US Equities"
+TICKER_CHANGE_PAIRS: tuple[tuple[str, str], ...] = (
+    ("COG", "CTRA"),
+    ("SYMC", "GEN"),
+    ("PKI", "RVTY"),
+    ("SQ", "XYZ"),
+)
 
 CSV_FIELDS = (
     "sample_category",
@@ -111,6 +121,7 @@ class FrozenSample:
     must_not_alias: str
     notes_hint: str
     lookup_ticker: str | None = None
+    delisted_suffix: str | None = None
 
 
 @dataclass
@@ -137,6 +148,21 @@ class ProbeRow:
     must_not_alias: str = ""
     live_security_name: str = ""
     live_error: str = ""
+    identity_source: str = ""
+    current_lookup_symbol: str = ""
+    current_asset_id: str = ""
+    current_security_name: str = ""
+    current_first_date: str = ""
+    current_last_date: str = ""
+    current_lookup_error: str = ""
+    delisted_lookup_symbol: str = ""
+    delisted_asset_id: str = ""
+    delisted_security_name: str = ""
+    delisted_first_date: str = ""
+    delisted_last_date: str = ""
+    delisted_lookup_error: str = ""
+    ticker_change_assetid_match: str = ""
+    corporate_action_handling: str = "NOT_TESTABLE"
 
     def as_csv_dict(self) -> dict[str, str]:
         return {name: getattr(self, name) for name in CSV_FIELDS}
@@ -153,6 +179,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2023-10-18",
         "MSFT",
         "Must retain Activision identity after Microsoft combination. ATVI must not resolve to MSFT bars.",
+        delisted_suffix="ATVI-202310",
     ),
     FrozenSample(
         "A_acquired_delisted",
@@ -164,6 +191,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2019-11-21",
         "BMY",
         "Must retain Celgene identity. CELG must not resolve to Bristol-Myers (BMY) bars.",
+        delisted_suffix="CELG-201911",
     ),
     FrozenSample(
         "A_acquired_delisted",
@@ -175,6 +203,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2022-02-15",
         "AMD",
         "Must retain Xilinx identity. XLNX must not resolve to AMD bars.",
+        delisted_suffix="XLNX-202202",
     ),
     FrozenSample(
         "A_acquired_delisted",
@@ -186,6 +215,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2023-05-04",
         "",
         "Failed/delisted bank. Need own historical series, not a successor alias.",
+        delisted_suffix="FRC-202305",
     ),
     FrozenSample(
         "A_acquired_delisted",
@@ -197,6 +227,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2023-03-15",
         "",
         "Failed/delisted bank. Need own historical series, not a successor alias.",
+        delisted_suffix="SIVB-202303",
     ),
     FrozenSample(
         "B_identity_chain_unresolved",
@@ -208,6 +239,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2019-12-05",
         "PARA/WBD",
         "Do not infer identity from successor ticker. CBS is not automatically PARA or WBD.",
+        delisted_suffix="CBS-201912",
     ),
     FrozenSample(
         "B_identity_chain_unresolved",
@@ -219,6 +251,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2019-12-05",
         "PARA/WBD",
         "Do not infer identity from successor ticker.",
+        delisted_suffix="VIAB-201912",
     ),
     FrozenSample(
         "B_identity_chain_unresolved",
@@ -230,6 +263,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2022-02-17",
         "PARA",
         "Do not treat VIAC as automatically PARA. WBD is not automatically DISCA.",
+        delisted_suffix="VIAC-202202",
     ),
     FrozenSample(
         "B_identity_chain_unresolved",
@@ -241,6 +275,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2019-07-01",
         "LHX",
         "L3 standalone is not L3Harris. Do not alias LLL to LHX.",
+        delisted_suffix="LLL-201907",
     ),
     FrozenSample(
         "B_identity_chain_unresolved",
@@ -252,6 +287,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2020-04-06",
         "RTX",
         "Raytheon Company is not RTX. Do not alias RTN to UTX/RTX.",
+        delisted_suffix="RTN-202004",
     ),
     FrozenSample(
         "B_identity_chain_unresolved",
@@ -263,6 +299,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2019-06-03",
         "DOW/DD/CTVA",
         "Combination/split chain. Do not guess successor identity from current tickers.",
+        delisted_suffix="DWDP-201906",
     ),
     FrozenSample(
         "C_still_listed_download_hole",
@@ -340,6 +377,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2021-10-04",
         "",
         "Ticker change COG→CTRA. Same security_id expected if same security. Predecessor lookup may fail (Norgate current-symbol-only).",
+        delisted_suffix="COG-202110",
     ),
     FrozenSample(
         "D_ticker_change_successor_listed",
@@ -362,6 +400,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2019-11-05",
         "",
         "Ticker change SYMC→NLOK→GEN. Same security_id expected if same security.",
+        delisted_suffix="SYMC-201911",
     ),
     FrozenSample(
         "D_ticker_change_successor_listed",
@@ -384,6 +423,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2023-05-16",
         "",
         "Ticker change PKI→RVTY. Same security_id expected if same security.",
+        delisted_suffix="PKI-202305",
     ),
     FrozenSample(
         "D_ticker_change_successor_listed",
@@ -406,6 +446,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2016-10-03",
         "current DO",
         "Must not fetch the currently listed namesake. Needs historical occupancy + stable ID.",
+        delisted_suffix="DO-201610",
     ),
     FrozenSample(
         "E_ticker_recycling_risk",
@@ -417,6 +458,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2018-03-19",
         "current CHK",
         "Must not fetch the currently listed namesake. Needs historical occupancy + stable ID.",
+        delisted_suffix="CHK-201803",
     ),
     FrozenSample(
         "E_ticker_recycling_risk",
@@ -428,6 +470,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2018-11-06",
         "current CA",
         "Must not fetch the currently listed namesake. Needs historical occupancy + stable ID.",
+        delisted_suffix="CA-201811",
     ),
     FrozenSample(
         "E_ticker_recycling_risk",
@@ -439,6 +482,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2020-06-22",
         "current ADS",
         "Must not fetch the currently listed namesake. Needs historical occupancy + stable ID.",
+        delisted_suffix="ADS-202006",
     ),
     FrozenSample(
         "M_known_case",
@@ -451,6 +495,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "sea-limited",
         "SE+2015 must be Spectra Energy, distinct assetid from Sea Limited. Local SE.csv is Sea. Do not blacklist SE.",
         lookup_ticker="SE",
+        delisted_suffix="SE-201702",
     ),
     FrozenSample(
         "M_known_case",
@@ -475,6 +520,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "current HAR",
         "PIT is Harman. Local HAR.csv is an identity mismatch. Vendor must identify Harman as a distinct historical security with 2006–2017 bars.",
         lookup_ticker="HAR",
+        delisted_suffix="HAR-201703",
     ),
     FrozenSample(
         "M_known_case",
@@ -498,6 +544,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2018-12-21",
         "CI",
         "Must be Express Scripts, not Cigna. Local ESRX.csv ends 2018-12-21. ESRX is not automatically CI.",
+        delisted_suffix="ESRX-201812",
     ),
     FrozenSample(
         "M_known_case",
@@ -509,6 +556,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2025-01-21",
         "",
         "Same Class A as XYZ. Vendor should preserve one assetid across SQ→XYZ. Predecessor ticker lookup may fail (current-symbol-only).",
+        delisted_suffix="SQ-202501",
     ),
     FrozenSample(
         "M_known_case",
@@ -531,6 +579,7 @@ FROZEN_SAMPLE: tuple[FrozenSample, ...] = (
         "2023-09-12",
         "tko-group-holdings",
         "WWE is a different issuer from TKO Group (CIK 0001973266). Not seeded. Probe whether vendor keeps a distinct identity.",
+        delisted_suffix="WWE-202309",
     ),
     FrozenSample(
         "M_known_case",
@@ -564,8 +613,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("audit"),
-        help="Directory for vendor_coverage_probe.csv and vendor_coverage_probe.json.",
+        default=Path("audit/norgate_trial"),
+        help=(
+            "Directory for vendor_coverage_probe.csv and vendor_coverage_probe.json. "
+            "Defaults to audit/norgate_trial. Refuses audit/ so the 2026-09-02 probe is not overwritten."
+        ),
     )
     parser.add_argument(
         "--env-file",
@@ -679,6 +731,389 @@ def detect_environment(env_file: Path) -> dict[str, Any]:
     }
 
 
+def assert_trial_output_dir(output_dir: Path) -> Path:
+    """Refuse live writes that would replace audit/vendor_coverage_probe.csv."""
+    resolved = output_dir.expanduser().resolve()
+    forbidden = (Path.cwd() / "audit").resolve()
+    if resolved == forbidden:
+        raise SystemExit(
+            "Refusing --output-dir audit because that would overwrite "
+            "audit/vendor_coverage_probe.csv. Use audit/norgate_trial."
+        )
+    return output_dir
+
+
+def _parse_iso_date(value: str) -> date | None:
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value[:10])
+    except ValueError:
+        return None
+
+
+def _iso_date(value: Any) -> str:
+    if value is None:
+        return ""
+    return str(value)[:10]
+
+
+def _series_len(data: Any) -> int:
+    if data is None:
+        return 0
+    try:
+        return int(len(data))
+    except TypeError:
+        return 0
+
+
+def _series_differ(left: Any, right: Any) -> bool | None:
+    if _series_len(left) == 0 or _series_len(right) == 0:
+        return None
+    equals = getattr(left, "equals", None)
+    if callable(equals):
+        return not bool(equals(right))
+    return left != right
+
+
+def empty_lookup_result(symbol: str, error: str = "") -> dict[str, Any]:
+    return {
+        "symbol": symbol,
+        "found": False,
+        "assetid": "",
+        "security_name": "",
+        "exchange_name": "",
+        "vendor_symbol": "",
+        "first_date": "",
+        "last_date": "",
+        "daily_ohlcv": "UNKNOWN",
+        "adjusted_close": "UNKNOWN",
+        "unadjusted_close": "UNKNOWN",
+        "corporate_action_handling": "NOT_TESTABLE",
+        "error": error,
+        "bar_count_totalreturn": 0,
+        "bar_count_none": 0,
+    }
+
+
+def alias_tickers(must_not_alias: str) -> set[str]:
+    aliases: set[str] = set()
+    if not must_not_alias:
+        return aliases
+    for part in must_not_alias.replace(",", "/").split("/"):
+        token = part.strip()
+        if not token or token.lower().startswith("current "):
+            continue
+        if any(char.islower() for char in token):
+            continue
+        aliases.add(token.upper())
+    return aliases
+
+
+def is_alias_identity(identity: dict[str, Any], must_not_alias: str) -> bool:
+    symbol = (identity.get("vendor_symbol") or identity.get("symbol") or "").upper()
+    if "-" in symbol:
+        symbol = symbol.split("-", 1)[0]
+    return symbol in alias_tickers(must_not_alias)
+
+
+def coverage_status_for_dates(first: str, last: str, sample: FrozenSample) -> str:
+    first_d = _parse_iso_date(first)
+    last_d = _parse_iso_date(last)
+    if first_d is None or last_d is None:
+        return "NOT_TESTABLE"
+    valid_start = _parse_iso_date(sample.security_valid_from) or REQUIRED_START
+    valid_end = _parse_iso_date(sample.security_valid_to) or REQUIRED_END
+    eval_start = max(REQUIRED_START, valid_start)
+    eval_end = min(REQUIRED_END, valid_end)
+    if eval_start > eval_end:
+        return "NOT_TESTABLE"
+    if first_d <= eval_start and last_d >= eval_end:
+        return "LIVE_PARTIAL"
+    return "NOT_TESTABLE"
+
+
+def lookup_one_symbol(client: Any, symbol: str) -> dict[str, Any]:
+    """Single-symbol metadata + bounded prices. Never scans a vendor database."""
+    result = empty_lookup_result(symbol)
+    try:
+        assetid = client.assetid(symbol)
+    except Exception as exc:  # noqa: BLE001 — missing tickers are expected
+        result["error"] = f"{type(exc).__name__}: {exc}"
+        return result
+    if assetid is None:
+        result["error"] = "assetid returned None"
+        return result
+    result["found"] = True
+    result["assetid"] = str(assetid)
+    try:
+        name = client.security_name(symbol)
+        result["security_name"] = "" if name is None else str(name)
+    except Exception as exc:  # noqa: BLE001
+        result["error"] = f"{type(exc).__name__}: {exc}"
+    try:
+        exchange = client.exchange_name(symbol)
+        result["exchange_name"] = "" if exchange is None else str(exchange)
+    except Exception:  # noqa: BLE001
+        result["exchange_name"] = ""
+    try:
+        vendor_symbol = client.symbol(assetid)
+        result["vendor_symbol"] = str(vendor_symbol if vendor_symbol is not None else symbol)
+    except Exception:  # noqa: BLE001
+        result["vendor_symbol"] = symbol
+    try:
+        result["first_date"] = _iso_date(client.first_quoted_date(symbol))
+        result["last_date"] = _iso_date(client.last_quoted_date(symbol))
+    except Exception as exc:  # noqa: BLE001
+        result["error"] = f"{type(exc).__name__}: {exc}"
+    totalreturn = _bounded_price_timeseries(client, symbol, "TOTALRETURN")
+    none_bars = _bounded_price_timeseries(client, symbol, "NONE")
+    result["bar_count_totalreturn"] = _series_len(totalreturn)
+    result["bar_count_none"] = _series_len(none_bars)
+    if result["bar_count_totalreturn"]:
+        result["daily_ohlcv"] = "YES"
+        result["adjusted_close"] = "YES"
+    differ = _series_differ(totalreturn, none_bars)
+    if differ is None:
+        result["corporate_action_handling"] = "NOT_TESTABLE"
+    else:
+        result["corporate_action_handling"] = "LIVE_PARTIAL"
+        result["unadjusted_close"] = "YES" if result["bar_count_none"] else "UNKNOWN"
+    return result
+
+
+def _bounded_price_timeseries(client: Any, symbol: str, adjustment: str) -> Any:
+    adjustment_type = getattr(client, "StockPriceAdjustmentType", None)
+    setting = adjustment
+    if adjustment_type is not None:
+        setting = getattr(adjustment_type, adjustment, adjustment)
+    kwargs: dict[str, Any] = {
+        "stock_price_adjustment_setting": setting,
+        "start_date": REQUIRED_START.isoformat(),
+        "end_date": REQUIRED_END.isoformat(),
+        "limit": 3,
+        "timeseriesformat": "pandas-dataframe",
+    }
+    padding_type = getattr(client, "PaddingType", None)
+    if padding_type is not None and getattr(padding_type, "NONE", None) is not None:
+        kwargs["padding_setting"] = padding_type.NONE
+    try:
+        return client.price_timeseries(symbol, **kwargs)
+    except TypeError:
+        kwargs.pop("padding_setting", None)
+        try:
+            return client.price_timeseries(symbol, **kwargs)
+        except Exception:  # noqa: BLE001
+            return None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def store_current_lookup(row: ProbeRow, result: dict[str, Any]) -> None:
+    row.current_lookup_symbol = result["symbol"]
+    row.current_asset_id = result["assetid"]
+    row.current_security_name = result["security_name"]
+    row.current_first_date = result["first_date"]
+    row.current_last_date = result["last_date"]
+    row.current_lookup_error = result["error"]
+
+
+def store_delisted_lookup(row: ProbeRow, result: dict[str, Any]) -> None:
+    row.delisted_lookup_symbol = result["symbol"]
+    row.delisted_asset_id = result["assetid"]
+    row.delisted_security_name = result["security_name"]
+    row.delisted_first_date = result["first_date"]
+    row.delisted_last_date = result["last_date"]
+    row.delisted_lookup_error = result["error"]
+
+
+def _format_lookup(label: str, result: dict[str, Any]) -> str:
+    if result["found"]:
+        return (
+            f"{label} {result['symbol']}: assetid={result['assetid']} "
+            f"name={result['security_name']!r} first={result['first_date']} last={result['last_date']}"
+        )
+    error = result["error"] or "not found"
+    return f"{label} {result['symbol']}: NOT_FOUND ({error})"
+
+
+def identity_lookup(
+    sample: FrozenSample,
+    current: dict[str, Any],
+    suffix: dict[str, Any],
+) -> tuple[dict[str, Any] | None, str]:
+    if sample.delisted_suffix:
+        if suffix.get("found"):
+            return suffix, "delisted_suffix"
+        return None, ""
+    if current.get("found"):
+        return current, "current_ticker"
+    return None, ""
+
+
+def classify_live_row(
+    row: ProbeRow,
+    sample: FrozenSample,
+    current: dict[str, Any],
+    suffix: dict[str, Any],
+) -> None:
+    parts = [_format_lookup("Current ticker", current)]
+    if sample.delisted_suffix:
+        parts.append(_format_lookup("Delisted suffix", suffix))
+    else:
+        parts.append("Delisted suffix: not applicable (still-listed / current occupant / PIT-exit).")
+
+    identity, source = identity_lookup(sample, current, suffix)
+    row.identity_source = source
+    row.evidence_type = "LIVE"
+    row.ticker_history = "NO"
+    alias_hit = False
+    if identity is not None:
+        row.vendor_security_id = identity["assetid"]
+        row.vendor_symbol = identity["vendor_symbol"] or identity["symbol"]
+        row.first_date = identity["first_date"]
+        row.last_date = identity["last_date"]
+        row.live_security_name = identity["security_name"]
+        row.daily_ohlcv = identity["daily_ohlcv"]
+        row.adjusted_close = identity["adjusted_close"]
+        row.corporate_action_handling = identity["corporate_action_handling"]
+        row.delisted_support = "YES" if source == "delisted_suffix" else "UNKNOWN"
+        alias_hit = is_alias_identity(identity, sample.must_not_alias)
+        row.identity_status = "FAIL" if alias_hit else "LIVE_PARTIAL"
+        row.coverage_status = coverage_status_for_dates(row.first_date, row.last_date, sample)
+    else:
+        row.identity_status = "NOT_TESTABLE"
+        row.coverage_status = "NOT_TESTABLE"
+        if sample.delisted_suffix:
+            row.delisted_support = "NOT_TESTABLE"
+            if current.get("found"):
+                parts.append(
+                    "Current ticker resolved but is not historical identity for this occupancy; "
+                    "suffix miss keeps identity NOT_TESTABLE."
+                )
+            row.live_error = suffix.get("error") or current.get("error") or ""
+        else:
+            row.live_error = current.get("error") or ""
+
+    extra = ""
+    if alias_hit:
+        extra += " FAIL: resolved identity matches must-not-alias."
+    extra += (
+        " Lookup success is not PASS. Missing Trial history is not FAIL. "
+        "Coverage stays NOT_TESTABLE unless quoted dates cover eval window 2013-07-08→2025-12-31."
+    )
+    row.notes = (
+        f"{' '.join(parts)} Expected identity: {sample.expected_identity}.{extra} {sample.notes_hint}"
+    ).strip()
+
+
+def lookup_asset_ids(row: ProbeRow) -> set[str]:
+    ids: set[str] = set()
+    if row.current_asset_id:
+        ids.add(row.current_asset_id)
+    if row.delisted_asset_id:
+        ids.add(row.delisted_asset_id)
+    return ids
+
+
+def compare_ticker_change_pairs(rows: list[ProbeRow]) -> dict[str, str]:
+    by_ticker: dict[str, ProbeRow] = {}
+    for row in rows:
+        if row.ticker not in {"SE", "HAR"}:
+            by_ticker[row.ticker] = row
+    matches: dict[str, str] = {}
+    for predecessor, successor in TICKER_CHANGE_PAIRS:
+        pred = by_ticker.get(predecessor)
+        succ = by_ticker.get(successor)
+        if pred is None or succ is None:
+            matches[f"{predecessor}->{successor}"] = "NOT_TESTABLE"
+            continue
+        pred_ids = lookup_asset_ids(pred)
+        succ_ids = lookup_asset_ids(succ)
+        if not pred_ids or not succ_ids:
+            status = "NOT_TESTABLE"
+        elif pred_ids & succ_ids:
+            status = "YES"
+        else:
+            status = "NO"
+        pred.ticker_change_assetid_match = status
+        succ.ticker_change_assetid_match = status
+        pred.notes = f"{pred.notes} Ticker-change {predecessor}->{successor} same assetid: {status}."
+        succ.notes = f"{succ.notes} Ticker-change {predecessor}->{successor} same assetid: {status}."
+        matches[f"{predecessor}->{successor}"] = status
+    return matches
+
+
+def apply_recycle_identity_rules(rows: list[ProbeRow]) -> None:
+    se_2015 = next(r for r in rows if r.ticker == "SE" and "2015" in r.historical_period)
+    se_2018 = next(r for r in rows if r.ticker == "SE" and "2018" in r.historical_period)
+    spectra_id = se_2015.delisted_asset_id
+    sea_id = se_2018.current_asset_id
+    if spectra_id and sea_id:
+        if spectra_id == sea_id:
+            se_2015.identity_status = "FAIL"
+            se_2015.notes = (
+                f"{se_2015.notes} FAIL: Spectra suffix and Sea current ticker share assetid {spectra_id} "
+                "(recycle collapse)."
+            )
+        else:
+            se_2015.notes = (
+                f"{se_2015.notes} Recycle-safe: Spectra assetid {spectra_id} != Sea assetid {sea_id}."
+            )
+            se_2018.notes = (
+                f"{se_2018.notes} Recycle-safe: Sea assetid {sea_id} != Spectra assetid {spectra_id}."
+            )
+
+    har_harman = next(r for r in rows if r.ticker == "HAR" and "Harman" in r.historical_period)
+    har_current = next(r for r in rows if r.ticker == "HAR" and "current" in r.historical_period)
+    harman_id = har_harman.delisted_asset_id
+    current_id = har_current.current_asset_id
+    if harman_id and current_id:
+        if harman_id == current_id:
+            har_harman.identity_status = "FAIL"
+            har_harman.notes = (
+                f"{har_harman.notes} FAIL: Harman suffix and current HAR share assetid {harman_id} "
+                "(recycle collapse)."
+            )
+        else:
+            har_harman.notes = (
+                f"{har_harman.notes} Recycle-safe: Harman assetid {harman_id} != current HAR assetid {current_id}."
+            )
+
+
+def apply_live_sample_lookups(
+    client: Any,
+    rows: list[ProbeRow],
+    *,
+    delisted_db_present: bool,
+) -> dict[str, Any]:
+    """Query the frozen 37-row sample only. Does not invoke database_symbols."""
+    samples_by_ticker_period = {(row.ticker, row.historical_period): row for row in rows}
+    for sample in FROZEN_SAMPLE:
+        row = samples_by_ticker_period[(sample.ticker, sample.historical_period)]
+        current = lookup_one_symbol(client, sample.lookup_ticker or sample.ticker)
+        store_current_lookup(row, current)
+        if sample.delisted_suffix:
+            if delisted_db_present:
+                suffix = lookup_one_symbol(client, sample.delisted_suffix)
+            else:
+                suffix = empty_lookup_result(
+                    sample.delisted_suffix,
+                    "US Equities Delisted not present; suffix lookup skipped.",
+                )
+            store_delisted_lookup(row, suffix)
+        else:
+            suffix = empty_lookup_result("")
+        classify_live_row(row, sample, current, suffix)
+    ticker_change = compare_ticker_change_pairs(rows)
+    apply_recycle_identity_rules(rows)
+    return {
+        "suffix_lookups_enabled": delisted_db_present,
+        "database_symbols_called": False,
+        "ticker_change_assetid_match": ticker_change,
+    }
+
+
 def _docs_row(sample: FrozenSample) -> ProbeRow:
     alias = (
         f" Must not alias to {sample.must_not_alias}."
@@ -719,9 +1154,26 @@ def _docs_row(sample: FrozenSample) -> ProbeRow:
     )
 
 
+def _database_names(raw: list[Any]) -> list[str]:
+    return [str(item) for item in raw]
+
+
+def _has_database(names: list[str], expected: str) -> bool:
+    return any(name.casefold() == expected.casefold() for name in names)
+
+
 def _try_live_norgate(rows: list[ProbeRow]) -> dict[str, Any]:
     """Query individual symbols only. Never download a database of prices."""
-    live_meta: dict[str, Any] = {"attempted": True, "ndu_running": False, "databases": [], "errors": []}
+    live_meta: dict[str, Any] = {
+        "attempted": True,
+        "ndu_running": False,
+        "databases": [],
+        "errors": [],
+        "delisted_db_present": False,
+        "suffix_lookups_enabled": False,
+        "database_symbols_called": False,
+        "ticker_change_assetid_match": {},
+    }
     try:
         import norgatedata  # type: ignore[import-not-found]
     except Exception as exc:  # noqa: BLE001
@@ -737,53 +1189,54 @@ def _try_live_norgate(rows: list[ProbeRow]) -> dict[str, Any]:
         return live_meta
 
     databases_fn = getattr(norgatedata, "databases", None)
+    names: list[str] = []
     if callable(databases_fn):
         try:
-            live_meta["databases"] = list(databases_fn())
+            names = _database_names(list(databases_fn()))
+            live_meta["databases"] = names
         except Exception as exc:  # noqa: BLE001
             live_meta["errors"].append(f"databases() failed: {exc}")
 
-    samples_by_ticker_period = {(row.ticker, row.historical_period): row for row in rows}
-    for sample in FROZEN_SAMPLE:
-        row = samples_by_ticker_period[(sample.ticker, sample.historical_period)]
-        symbol = sample.lookup_ticker or sample.ticker
-        try:
-            assetid = norgatedata.assetid(symbol)
-            name = norgatedata.security_name(symbol)
-            first_quoted = norgatedata.first_quoted_date(symbol)
-            last_quoted = norgatedata.last_quoted_date(symbol)
-            priceadjust = norgatedata.StockPriceAdjustmentType.TOTALRETURN
-            pricedata = norgatedata.price_timeseries(
-                symbol,
-                stock_price_adjustment_setting=priceadjust,
-                start_date="2013-07-08",
-                end_date="2025-12-31",
-                limit=3,
-                timeseriesformat="pandas-dataframe",
-            )
-            row.vendor_security_id = str(assetid) if assetid is not None else ""
-            row.vendor_symbol = str(norgatedata.symbol(assetid) if assetid is not None else symbol)
-            row.first_date = "" if first_quoted is None else str(first_quoted)[:10]
-            row.last_date = "" if last_quoted is None else str(last_quoted)[:10]
-            row.daily_ohlcv = "YES" if pricedata is not None and len(pricedata) else "UNKNOWN"
-            row.adjusted_close = "YES"
-            row.delisted_support = "YES" if last_quoted else "UNKNOWN"
-            row.identity_status = "LIVE_PARTIAL"
-            row.coverage_status = "LIVE_PARTIAL"
-            row.evidence_type = "LIVE"
-            row.live_security_name = "" if name is None else str(name)
-            row.notes = (
-                f"LIVE probe of {symbol}. assetid={row.vendor_security_id} "
-                f"name={row.live_security_name!r} first={row.first_date} last={row.last_date}. "
-                f"{sample.notes_hint}"
-            )
-        except Exception as exc:  # noqa: BLE001
-            row.live_error = f"{type(exc).__name__}: {exc}"
-            row.notes = (
-                f"{row.notes} Live lookup of {symbol} failed: {row.live_error}. "
-                "No additional symbols were searched; full delisted-database scan was not performed."
-            )
+    listed_present = _has_database(names, LISTED_DATABASE_NAME)
+    delisted_present = _has_database(names, DELISTED_DATABASE_NAME)
+    live_meta["delisted_db_present"] = delisted_present
+    if not listed_present or not delisted_present:
+        live_meta["errors"].append(
+            "databases() missing US Equities and/or US Equities Delisted; "
+            "suffix lookups skipped (not Platinum)."
+        )
+
+    lookup_meta = apply_live_sample_lookups(
+        norgatedata,
+        rows,
+        delisted_db_present=delisted_present,
+    )
+    live_meta.update(lookup_meta)
     return live_meta
+
+
+def _row_by_ticker(rows: list[ProbeRow], ticker: str) -> ProbeRow:
+    matches = [row for row in rows if row.ticker == ticker]
+    if len(matches) != 1:
+        raise KeyError(f"expected one row for {ticker}, got {len(matches)}")
+    return matches[0]
+
+
+def _live_observation(row: ProbeRow) -> str:
+    current = (
+        f"current {row.current_lookup_symbol or row.ticker} "
+        f"assetid={row.current_asset_id or 'NOT_FOUND'}"
+    )
+    suffix = ""
+    if row.delisted_lookup_symbol:
+        suffix = (
+            f"; suffix {row.delisted_lookup_symbol} "
+            f"assetid={row.delisted_asset_id or 'NOT_FOUND'}"
+        )
+    return (
+        f"{current}{suffix}; identity={row.identity_status} "
+        f"coverage={row.coverage_status} source={row.identity_source or 'none'}"
+    )
 
 
 def _known_case_results(rows: list[ProbeRow], live: bool) -> dict[str, Any]:
@@ -791,6 +1244,10 @@ def _known_case_results(rows: list[ProbeRow], live: bool) -> dict[str, Any]:
     se_2018 = next(r for r in rows if r.ticker == "SE" and "2018" in r.historical_period)
     har_harman = next(r for r in rows if r.ticker == "HAR" and "Harman" in r.historical_period)
     har_current = next(r for r in rows if r.ticker == "HAR" and "current" in r.historical_period)
+    atvi = _row_by_ticker(rows, "ATVI")
+    xyz = _row_by_ticker(rows, "XYZ")
+    gme = _row_by_ticker(rows, "GME")
+    tko = _row_by_ticker(rows, "TKO")
     results = {
         "SE": {
             "status": "NOT_TESTABLE" if not live else se_2015.identity_status,
@@ -798,6 +1255,8 @@ def _known_case_results(rows: list[ProbeRow], live: bool) -> dict[str, Any]:
             "observed": (
                 "Not live-tested. Documented class: delisted suffix plus distinct assetid can represent two occupancies. "
                 "Official FAQ does not expose prior-symbol history, so ticker SE today would be the current occupant unless the delisted suffix is known."
+                if not live
+                else f"{_live_observation(se_2015)} | {_live_observation(se_2018)}"
             ),
             "spectra_row": se_2015.identity_status,
             "sea_row": se_2018.identity_status,
@@ -807,36 +1266,66 @@ def _known_case_results(rows: list[ProbeRow], live: bool) -> dict[str, Any]:
             "expected": "Harman International distinct from current HAR; bars during 2006–2017 belonging to Harman.",
             "observed": (
                 "Not live-tested. Local HAR.csv remains an identity mismatch. Vendor capability class includes delisted HAR-YYYYMM, unproven for this name."
+                if not live
+                else f"{_live_observation(har_harman)} | {_live_observation(har_current)}"
             ),
             "harman_row": har_harman.identity_status,
             "current_row": har_current.identity_status,
         },
         "ESRX": {
-            "status": "NOT_TESTABLE",
+            "status": "NOT_TESTABLE" if not live else _row_by_ticker(rows, "ESRX").identity_status,
             "expected": "Express Scripts own security through ~2018-12; ESRX ≠ CI.",
-            "observed": "Not live-tested. Documented delisted tape would keep a non-surviving acquiree as its own delisted security if Platinum is installed.",
+            "observed": "Not live-tested." if not live else _live_observation(_row_by_ticker(rows, "ESRX")),
         },
-        "ATVI": {"status": "NOT_TESTABLE", "expected": "Activision bars, not MSFT.", "observed": "Not live-tested."},
-        "CELG": {"status": "NOT_TESTABLE", "expected": "Celgene bars, not BMY.", "observed": "Not live-tested."},
-        "XLNX": {"status": "NOT_TESTABLE", "expected": "Xilinx bars, not AMD.", "observed": "Not live-tested."},
-        "FRC": {"status": "NOT_TESTABLE", "expected": "First Republic own delisted series.", "observed": "Not live-tested."},
-        "SIVB": {"status": "NOT_TESTABLE", "expected": "SVB Financial own delisted series.", "observed": "Not live-tested."},
+        "ATVI": {
+            "status": "NOT_TESTABLE" if not live else atvi.identity_status,
+            "expected": "Activision bars, not MSFT.",
+            "observed": "Not live-tested." if not live else _live_observation(atvi),
+        },
+        "CELG": {
+            "status": "NOT_TESTABLE" if not live else _row_by_ticker(rows, "CELG").identity_status,
+            "expected": "Celgene bars, not BMY.",
+            "observed": "Not live-tested." if not live else _live_observation(_row_by_ticker(rows, "CELG")),
+        },
+        "XLNX": {
+            "status": "NOT_TESTABLE" if not live else _row_by_ticker(rows, "XLNX").identity_status,
+            "expected": "Xilinx bars, not AMD.",
+            "observed": "Not live-tested." if not live else _live_observation(_row_by_ticker(rows, "XLNX")),
+        },
+        "FRC": {
+            "status": "NOT_TESTABLE" if not live else _row_by_ticker(rows, "FRC").identity_status,
+            "expected": "First Republic own delisted series.",
+            "observed": "Not live-tested." if not live else _live_observation(_row_by_ticker(rows, "FRC")),
+        },
+        "SIVB": {
+            "status": "NOT_TESTABLE" if not live else _row_by_ticker(rows, "SIVB").identity_status,
+            "expected": "SVB Financial own delisted series.",
+            "observed": "Not live-tested." if not live else _live_observation(_row_by_ticker(rows, "SIVB")),
+        },
         "TKO": {
-            "status": "NOT_TESTABLE",
+            "status": "NOT_TESTABLE" if not live else tko.identity_status,
             "expected": "TKO from 2023-09-12 as a new issuer; WWE predecessor bars must not be labeled TKO.",
             "observed": (
                 "Not live-tested. Residual risk already documented: Norgate surviving-entity / merger-of-equals rules may prepend WWE history under TKO."
+                if not live
+                else _live_observation(tko)
             ),
         },
         "XYZ": {
-            "status": "NOT_TESTABLE",
+            "status": "NOT_TESTABLE" if not live else xyz.identity_status,
             "expected": "Same assetid across SQ→XYZ (same Class A).",
-            "observed": "Not live-tested. Documented behavior prepends history onto the current symbol and keeps one assetid through ticker changes.",
+            "observed": (
+                "Not live-tested. Documented behavior prepends history onto the current symbol and keeps one assetid through ticker changes."
+                if not live
+                else f"{_live_observation(_row_by_ticker(rows, 'SQ'))} | {_live_observation(xyz)}; pair={xyz.ticker_change_assetid_match or 'NOT_TESTABLE'}"
+            ),
         },
         "GME": {
-            "status": "NOT_TESTABLE",
+            "status": "NOT_TESTABLE" if not live else gme.identity_status,
             "expected": "One stable identity and ordinary daily history.",
-            "observed": "Not live-tested. Control case remains unproven on Norgate until NDU is available.",
+            "observed": "Not live-tested. Control case remains unproven on Norgate until NDU is available."
+            if not live
+            else _live_observation(gme),
         },
     }
     return results
@@ -846,7 +1335,12 @@ def classify_verdict(env: dict[str, Any], live_meta: dict[str, Any]) -> dict[str
     if env["live_queryable"] and live_meta.get("ndu_running"):
         return {
             "verdict": "INSUFFICIENT",
-            "reason": "Live NDU was reachable but this run did not complete a full frozen-sample pass/fail classification beyond partial lookups.",
+            "reason": (
+                "Live NDU was reachable and the 37-row sample was queried "
+                "(current ticker plus frozen SYMBOL-YYYYMM). Trial coverage cannot prove "
+                "2013-07-08→2025-12-31, so rows stay NOT_TESTABLE or LIVE_PARTIAL; "
+                "vendor-class remains INSUFFICIENT / PARTIALLY SUITABLE."
+            ),
         }
     return {
         "verdict": "PROMISING — REQUIRES FULL TRIAL",
@@ -867,7 +1361,9 @@ def build_payload(
     verdict = classify_verdict(env, live_meta)
     return {
         "probe_date": env["probe_date"],
-        "provider_tested": "Norgate US Platinum (not live)",
+        "provider_tested": (
+            "Norgate US Platinum" if env["live_queryable"] else "Norgate US Platinum (not live)"
+        ),
         "evidence_type": "DOCUMENTED" if not env["live_queryable"] else "LIVE",
         "testable_in_current_environment": env["testable_in_current_environment"],
         "environment": env,
@@ -914,6 +1410,7 @@ def build_payload(
 
 
 def write_artifacts(payload: dict[str, Any], rows: list[ProbeRow], output_dir: Path) -> None:
+    assert_trial_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     csv_path = output_dir / "vendor_coverage_probe.csv"
     json_path = output_dir / "vendor_coverage_probe.json"
@@ -930,6 +1427,7 @@ def write_artifacts(payload: dict[str, Any], rows: list[ProbeRow], output_dir: P
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     args = parse_args()
+    assert_trial_output_dir(args.output_dir)
     env = detect_environment(args.env_file)
     rows = [_docs_row(sample) for sample in FROZEN_SAMPLE]
     live_meta: dict[str, Any] = {"attempted": False, "ndu_running": False, "databases": [], "errors": []}
