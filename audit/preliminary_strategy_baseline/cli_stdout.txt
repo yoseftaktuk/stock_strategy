@@ -1,0 +1,1293 @@
+========================================
+BACKTEST RESULT
+========================================
+Period:
+2015-01-01 → 2025-12-31
+Universe:
+Historical S&P 500 Point-in-Time
+Initial Capital:
+$100,000.00
+Final Equity:
+$193,743.27
+Total Return:
+93.74%
+CAGR:
+6.20%
+Volatility:
+28.23%
+Sharpe:
+0.36
+Max Drawdown:
+-45.90%
+Fills:
+1522
+Commission:
+$5,009.56
+Slippage:
+$10,019.03
+PIT universe (peak):
+506
+Unique constituents:
+724
+Market Data Available:
+564
+Missing Market Data:
+115
+Unusable Market Data:
+3
+Insufficient History:
+42
+Momentum Eligible:
+230
+Selected:
+10
+Historical S&P 500 membership is applied.
+
+Market data is currently incomplete:
+115 historical constituents have no local price data.
+
+The current result is NOT a full S&P 500 historical backtest.
+Warnings:
+Missing market data: 115 unique constituents have no prices (peak 93 missing on a rebalance date, 120 dates). Prices loaded for 619 symbol(s). Universe membership was not dropped. Sample missing: AABA, ABMD, ADS, AGN, ALXN, ANSS, APC, ARG, ARNC, ATVI, AVB, BBBY, BCR, BF.B, BK, BRCM, BRK.B, BXLT, CA, CBS.
+Unusable price series: 3 symbol(s) failed price-quality or security-identity validation (reason=extreme_first_close, identity_mismatch; possible ticker identity mismatch). Series cannot fill; PIT membership was not dropped. Sample: CCE, HAR, PARA.
+Historical S&P 500 membership is applied.
+
+Price-quality validation failed for 3 constituent price series.
+
+Those series cannot fill. Universe membership was not dropped.
+Rebalance: 2016-01-04
+Universe Members: 504
+Missing Market Data: 93
+Unusable Market Data: 2
+Insufficient History: 20
+Failed Price Filter: 12
+Failed Liquidity Filter: 2
+Momentum Eligible: 201
+Selected: 10
+
+Rebalance: 2016-02-01
+Universe Members: 505
+Missing Market Data: 91
+Unusable Market Data: 2
+Insufficient History: 21
+Failed Price Filter: 17
+Failed Liquidity Filter: 2
+Momentum Eligible: 213
+Selected: 10
+
+Rebalance: 2016-03-01
+Universe Members: 505
+Missing Market Data: 92
+Unusable Market Data: 2
+Insufficient History: 20
+Failed Price Filter: 13
+Failed Liquidity Filter: 2
+Momentum Eligible: 124
+Selected: 10
+
+Rebalance: 2016-04-01
+Universe Members: 505
+Missing Market Data: 91
+Unusable Market Data: 2
+Insufficient History: 18
+Failed Price Filter: 12
+Failed Liquidity Filter: 3
+Momentum Eligible: 167
+Selected: 10
+
+Rebalance: 2016-05-02
+Universe Members: 505
+Missing Market Data: 92
+Unusable Market Data: 2
+Insufficient History: 17
+Failed Price Filter: 9
+Failed Liquidity Filter: 3
+Momentum Eligible: 200
+Selected: 10
+
+Rebalance: 2016-06-01
+Universe Members: 505
+Missing Market Data: 90
+Unusable Market Data: 1
+Insufficient History: 16
+Failed Price Filter: 9
+Failed Liquidity Filter: 3
+Momentum Eligible: 210
+Selected: 10
+
+Rebalance: 2016-07-01
+Universe Members: 504
+Missing Market Data: 87
+Unusable Market Data: 1
+Insufficient History: 15
+Failed Price Filter: 10
+Failed Liquidity Filter: 3
+Momentum Eligible: 229
+Selected: 10
+
+Rebalance: 2016-08-01
+Universe Members: 505
+Missing Market Data: 87
+Unusable Market Data: 1
+Insufficient History: 13
+Failed Price Filter: 10
+Failed Liquidity Filter: 3
+Momentum Eligible: 225
+Selected: 10
+
+Rebalance: 2016-09-01
+Universe Members: 505
+Missing Market Data: 87
+Unusable Market Data: 1
+Insufficient History: 13
+Failed Price Filter: 11
+Failed Liquidity Filter: 3
+Momentum Eligible: 285
+Selected: 10
+
+Rebalance: 2016-10-03
+Universe Members: 506
+Missing Market Data: 86
+Unusable Market Data: 1
+Insufficient History: 12
+Failed Price Filter: 9
+Failed Liquidity Filter: 1
+Momentum Eligible: 312
+Selected: 10
+
+Rebalance: 2016-11-01
+Universe Members: 506
+Missing Market Data: 86
+Unusable Market Data: 1
+Insufficient History: 11
+Failed Price Filter: 8
+Failed Liquidity Filter: 2
+Momentum Eligible: 273
+Selected: 10
+
+Rebalance: 2016-12-01
+Universe Members: 506
+Missing Market Data: 86
+Unusable Market Data: 1
+Insufficient History: 11
+Failed Price Filter: 6
+Failed Liquidity Filter: 2
+Momentum Eligible: 247
+Selected: 10
+
+Rebalance: 2017-01-03
+Universe Members: 506
+Missing Market Data: 85
+Unusable Market Data: 1
+Insufficient History: 11
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 318
+Selected: 10
+
+Rebalance: 2017-02-01
+Universe Members: 506
+Missing Market Data: 84
+Unusable Market Data: 1
+Insufficient History: 10
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 350
+Selected: 10
+
+Rebalance: 2017-03-01
+Universe Members: 506
+Missing Market Data: 84
+Unusable Market Data: 1
+Insufficient History: 9
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 342
+Selected: 10
+
+Rebalance: 2017-04-03
+Universe Members: 506
+Missing Market Data: 82
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 342
+Selected: 10
+
+Rebalance: 2017-05-01
+Universe Members: 506
+Missing Market Data: 80
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 340
+Selected: 10
+
+Rebalance: 2017-06-01
+Universe Members: 506
+Missing Market Data: 80
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 335
+Selected: 10
+
+Rebalance: 2017-07-03
+Universe Members: 506
+Missing Market Data: 78
+Unusable Market Data: 0
+Insufficient History: 10
+Failed Price Filter: 6
+Failed Liquidity Filter: 2
+Momentum Eligible: 326
+Selected: 10
+
+Rebalance: 2017-08-01
+Universe Members: 506
+Missing Market Data: 76
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 310
+Selected: 10
+
+Rebalance: 2017-09-01
+Universe Members: 506
+Missing Market Data: 76
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 314
+Selected: 10
+
+Rebalance: 2017-10-02
+Universe Members: 506
+Missing Market Data: 75
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 312
+Selected: 10
+
+Rebalance: 2017-11-01
+Universe Members: 506
+Missing Market Data: 74
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 352
+Selected: 10
+
+Rebalance: 2017-12-01
+Universe Members: 506
+Missing Market Data: 74
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 327
+Selected: 10
+
+Rebalance: 2018-01-02
+Universe Members: 505
+Missing Market Data: 73
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 334
+Selected: 10
+
+Rebalance: 2018-02-01
+Universe Members: 506
+Missing Market Data: 73
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 351
+Selected: 10
+
+Rebalance: 2018-03-01
+Universe Members: 506
+Missing Market Data: 73
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 338
+Selected: 10
+
+Rebalance: 2018-04-02
+Universe Members: 506
+Missing Market Data: 71
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 298
+Selected: 10
+
+Rebalance: 2018-05-01
+Universe Members: 506
+Missing Market Data: 70
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 291
+Selected: 10
+
+Rebalance: 2018-06-01
+Universe Members: 506
+Missing Market Data: 70
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 282
+Selected: 10
+
+Rebalance: 2018-07-02
+Universe Members: 506
+Missing Market Data: 71
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 4
+Failed Liquidity Filter: 1
+Momentum Eligible: 291
+Selected: 10
+
+Rebalance: 2018-08-01
+Universe Members: 506
+Missing Market Data: 71
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 288
+Selected: 10
+
+Rebalance: 2018-09-04
+Universe Members: 506
+Missing Market Data: 70
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 322
+Selected: 10
+
+Rebalance: 2018-10-01
+Universe Members: 505
+Missing Market Data: 70
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 312
+Selected: 10
+
+Rebalance: 2018-11-01
+Universe Members: 504
+Missing Market Data: 69
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 6
+Failed Liquidity Filter: 2
+Momentum Eligible: 294
+Selected: 10
+
+Rebalance: 2018-12-03
+Universe Members: 505
+Missing Market Data: 68
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 217
+Selected: 10
+
+Rebalance: 2019-01-02
+Universe Members: 505
+Missing Market Data: 69
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 7
+Failed Liquidity Filter: 2
+Momentum Eligible: 227
+Selected: 10
+
+Rebalance: 2019-02-01
+Universe Members: 505
+Missing Market Data: 69
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 137
+Selected: 10
+
+Rebalance: 2019-03-01
+Universe Members: 505
+Missing Market Data: 68
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 3
+Failed Liquidity Filter: 2
+Momentum Eligible: 222
+Selected: 10
+
+Rebalance: 2019-04-01
+Universe Members: 505
+Missing Market Data: 68
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 3
+Failed Liquidity Filter: 2
+Momentum Eligible: 270
+Selected: 10
+
+Rebalance: 2019-05-01
+Universe Members: 505
+Missing Market Data: 68
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 2
+Failed Liquidity Filter: 2
+Momentum Eligible: 275
+Selected: 10
+
+Rebalance: 2019-06-03
+Universe Members: 505
+Missing Market Data: 67
+Unusable Market Data: 0
+Insufficient History: 9
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 298
+Selected: 10
+
+Rebalance: 2019-07-01
+Universe Members: 505
+Missing Market Data: 66
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 2
+Failed Liquidity Filter: 2
+Momentum Eligible: 244
+Selected: 10
+
+Rebalance: 2019-08-01
+Universe Members: 505
+Missing Market Data: 65
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 3
+Failed Liquidity Filter: 2
+Momentum Eligible: 281
+Selected: 10
+
+Rebalance: 2019-09-03
+Universe Members: 505
+Missing Market Data: 63
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 5
+Failed Liquidity Filter: 2
+Momentum Eligible: 247
+Selected: 10
+
+Rebalance: 2019-10-01
+Universe Members: 505
+Missing Market Data: 62
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 4
+Failed Liquidity Filter: 2
+Momentum Eligible: 238
+Selected: 10
+
+Rebalance: 2019-11-01
+Universe Members: 505
+Missing Market Data: 62
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 3
+Failed Liquidity Filter: 2
+Momentum Eligible: 298
+Selected: 10
+
+Rebalance: 2019-12-02
+Universe Members: 505
+Missing Market Data: 61
+Unusable Market Data: 0
+Insufficient History: 8
+Failed Price Filter: 3
+Failed Liquidity Filter: 2
+Momentum Eligible: 323
+Selected: 10
+
+Rebalance: 2020-01-02
+Universe Members: 505
+Missing Market Data: 60
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 394
+Selected: 10
+
+Rebalance: 2020-02-03
+Universe Members: 505
+Missing Market Data: 59
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 370
+Selected: 10
+
+Rebalance: 2020-03-02
+Universe Members: 505
+Missing Market Data: 59
+Unusable Market Data: 0
+Insufficient History: 7
+Failed Price Filter: 4
+Failed Liquidity Filter: 1
+Momentum Eligible: 338
+Selected: 10
+
+Rebalance: 2020-04-01
+Universe Members: 505
+Missing Market Data: 58
+Unusable Market Data: 0
+Insufficient History: 4
+Failed Price Filter: 26
+Failed Liquidity Filter: 0
+Momentum Eligible: 245
+Selected: 10
+
+Rebalance: 2020-05-01
+Universe Members: 505
+Missing Market Data: 56
+Unusable Market Data: 0
+Insufficient History: 6
+Failed Price Filter: 14
+Failed Liquidity Filter: 0
+Momentum Eligible: 80
+Selected: 10
+
+Rebalance: 2020-06-01
+Universe Members: 505
+Missing Market Data: 55
+Unusable Market Data: 0
+Insufficient History: 5
+Failed Price Filter: 11
+Failed Liquidity Filter: 1
+Momentum Eligible: 219
+Selected: 10
+
+Rebalance: 2020-07-01
+Universe Members: 505
+Missing Market Data: 53
+Unusable Market Data: 0
+Insufficient History: 5
+Failed Price Filter: 10
+Failed Liquidity Filter: 1
+Momentum Eligible: 211
+Selected: 10
+
+Rebalance: 2020-08-03
+Universe Members: 505
+Missing Market Data: 53
+Unusable Market Data: 0
+Insufficient History: 5
+Failed Price Filter: 9
+Failed Liquidity Filter: 2
+Momentum Eligible: 209
+Selected: 10
+
+Rebalance: 2020-09-01
+Universe Members: 505
+Missing Market Data: 53
+Unusable Market Data: 0
+Insufficient History: 5
+Failed Price Filter: 7
+Failed Liquidity Filter: 1
+Momentum Eligible: 238
+Selected: 10
+
+Rebalance: 2020-10-01
+Universe Members: 505
+Missing Market Data: 54
+Unusable Market Data: 0
+Insufficient History: 5
+Failed Price Filter: 10
+Failed Liquidity Filter: 1
+Momentum Eligible: 262
+Selected: 10
+
+Rebalance: 2020-11-02
+Universe Members: 505
+Missing Market Data: 52
+Unusable Market Data: 0
+Insufficient History: 6
+Failed Price Filter: 9
+Failed Liquidity Filter: 1
+Momentum Eligible: 225
+Selected: 10
+
+Rebalance: 2020-12-01
+Universe Members: 505
+Missing Market Data: 51
+Unusable Market Data: 0
+Insufficient History: 6
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 214
+Selected: 10
+
+Rebalance: 2021-01-04
+Universe Members: 505
+Missing Market Data: 51
+Unusable Market Data: 0
+Insufficient History: 6
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 278
+Selected: 10
+
+Rebalance: 2021-02-01
+Universe Members: 505
+Missing Market Data: 49
+Unusable Market Data: 0
+Insufficient History: 6
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 290
+Selected: 10
+
+Rebalance: 2021-03-01
+Universe Members: 505
+Missing Market Data: 49
+Unusable Market Data: 0
+Insufficient History: 6
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 358
+Selected: 10
+
+Rebalance: 2021-04-01
+Universe Members: 505
+Missing Market Data: 49
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 436
+Selected: 10
+
+Rebalance: 2021-05-03
+Universe Members: 505
+Missing Market Data: 48
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 436
+Selected: 10
+
+Rebalance: 2021-06-01
+Universe Members: 505
+Missing Market Data: 47
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 429
+Selected: 10
+
+Rebalance: 2021-07-01
+Universe Members: 505
+Missing Market Data: 46
+Unusable Market Data: 0
+Insufficient History: 4
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 437
+Selected: 10
+
+Rebalance: 2021-08-02
+Universe Members: 505
+Missing Market Data: 45
+Unusable Market Data: 0
+Insufficient History: 4
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 422
+Selected: 10
+
+Rebalance: 2021-09-01
+Universe Members: 505
+Missing Market Data: 44
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 422
+Selected: 10
+
+Rebalance: 2021-10-01
+Universe Members: 505
+Missing Market Data: 45
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 429
+Selected: 10
+
+Rebalance: 2021-11-01
+Universe Members: 505
+Missing Market Data: 45
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 424
+Selected: 10
+
+Rebalance: 2021-12-01
+Universe Members: 505
+Missing Market Data: 45
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 404
+Selected: 10
+
+Rebalance: 2022-01-03
+Universe Members: 505
+Missing Market Data: 43
+Unusable Market Data: 0
+Insufficient History: 4
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 387
+Selected: 10
+
+Rebalance: 2022-02-01
+Universe Members: 505
+Missing Market Data: 43
+Unusable Market Data: 0
+Insufficient History: 4
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 406
+Selected: 10
+
+Rebalance: 2022-03-01
+Universe Members: 505
+Missing Market Data: 40
+Unusable Market Data: 1
+Insufficient History: 5
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 356
+Selected: 10
+
+Rebalance: 2022-04-01
+Universe Members: 505
+Missing Market Data: 40
+Unusable Market Data: 1
+Insufficient History: 4
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 300
+Selected: 10
+
+Rebalance: 2022-05-02
+Universe Members: 504
+Missing Market Data: 37
+Unusable Market Data: 1
+Insufficient History: 4
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 281
+Selected: 10
+
+Rebalance: 2022-06-01
+Universe Members: 504
+Missing Market Data: 37
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 215
+Selected: 10
+
+Rebalance: 2022-07-01
+Universe Members: 503
+Missing Market Data: 36
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 207
+Selected: 10
+
+Rebalance: 2022-08-01
+Universe Members: 503
+Missing Market Data: 36
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 2
+Failed Liquidity Filter: 1
+Momentum Eligible: 157
+Selected: 10
+
+Rebalance: 2022-09-01
+Universe Members: 503
+Missing Market Data: 36
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 2
+Failed Liquidity Filter: 1
+Momentum Eligible: 175
+Selected: 10
+
+Rebalance: 2022-10-03
+Universe Members: 503
+Missing Market Data: 34
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 175
+Selected: 10
+
+Rebalance: 2022-11-01
+Universe Members: 503
+Missing Market Data: 32
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 2
+Failed Liquidity Filter: 1
+Momentum Eligible: 117
+Selected: 10
+
+Rebalance: 2022-12-01
+Universe Members: 503
+Missing Market Data: 31
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 2
+Failed Liquidity Filter: 0
+Momentum Eligible: 178
+Selected: 10
+
+Rebalance: 2023-01-03
+Universe Members: 503
+Missing Market Data: 29
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 176
+Selected: 10
+
+Rebalance: 2023-02-01
+Universe Members: 503
+Missing Market Data: 29
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 188
+Selected: 10
+
+Rebalance: 2023-03-01
+Universe Members: 503
+Missing Market Data: 29
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 237
+Selected: 10
+
+Rebalance: 2023-04-03
+Universe Members: 503
+Missing Market Data: 28
+Unusable Market Data: 1
+Insufficient History: 1
+Failed Price Filter: 2
+Failed Liquidity Filter: 1
+Momentum Eligible: 193
+Selected: 10
+
+Rebalance: 2023-05-01
+Universe Members: 503
+Missing Market Data: 28
+Unusable Market Data: 1
+Insufficient History: 1
+Failed Price Filter: 2
+Failed Liquidity Filter: 1
+Momentum Eligible: 193
+Selected: 10
+
+Rebalance: 2023-06-01
+Universe Members: 503
+Missing Market Data: 26
+Unusable Market Data: 1
+Insufficient History: 1
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 216
+Selected: 10
+
+Rebalance: 2023-07-03
+Universe Members: 503
+Missing Market Data: 25
+Unusable Market Data: 1
+Insufficient History: 1
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 289
+Selected: 10
+
+Rebalance: 2023-08-01
+Universe Members: 503
+Missing Market Data: 25
+Unusable Market Data: 1
+Insufficient History: 1
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 277
+Selected: 10
+
+Rebalance: 2023-09-01
+Universe Members: 503
+Missing Market Data: 25
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 0
+Failed Liquidity Filter: 1
+Momentum Eligible: 322
+Selected: 10
+
+Rebalance: 2023-10-02
+Universe Members: 503
+Missing Market Data: 25
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 368
+Selected: 10
+
+Rebalance: 2023-11-01
+Universe Members: 503
+Missing Market Data: 24
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 3
+Failed Liquidity Filter: 0
+Momentum Eligible: 254
+Selected: 10
+
+Rebalance: 2023-12-01
+Universe Members: 503
+Missing Market Data: 24
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 0
+Momentum Eligible: 183
+Selected: 10
+
+Rebalance: 2024-01-02
+Universe Members: 503
+Missing Market Data: 23
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 288
+Selected: 10
+
+Rebalance: 2024-02-01
+Universe Members: 503
+Missing Market Data: 23
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 304
+Selected: 10
+
+Rebalance: 2024-03-01
+Universe Members: 503
+Missing Market Data: 23
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 1
+Failed Liquidity Filter: 0
+Momentum Eligible: 315
+Selected: 10
+
+Rebalance: 2024-04-01
+Universe Members: 503
+Missing Market Data: 22
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 352
+Selected: 10
+
+Rebalance: 2024-05-01
+Universe Members: 503
+Missing Market Data: 22
+Unusable Market Data: 1
+Insufficient History: 4
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 355
+Selected: 10
+
+Rebalance: 2024-06-03
+Universe Members: 503
+Missing Market Data: 21
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 364
+Selected: 10
+
+Rebalance: 2024-07-01
+Universe Members: 503
+Missing Market Data: 20
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 0
+Momentum Eligible: 335
+Selected: 10
+
+Rebalance: 2024-08-01
+Universe Members: 503
+Missing Market Data: 19
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 0
+Momentum Eligible: 305
+Selected: 10
+
+Rebalance: 2024-09-03
+Universe Members: 503
+Missing Market Data: 19
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 358
+Selected: 10
+
+Rebalance: 2024-10-01
+Universe Members: 503
+Missing Market Data: 19
+Unusable Market Data: 1
+Insufficient History: 4
+Failed Price Filter: 1
+Failed Liquidity Filter: 0
+Momentum Eligible: 410
+Selected: 10
+
+Rebalance: 2024-11-01
+Universe Members: 503
+Missing Market Data: 19
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 429
+Selected: 10
+
+Rebalance: 2024-12-02
+Universe Members: 503
+Missing Market Data: 18
+Unusable Market Data: 1
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 399
+Selected: 10
+
+Rebalance: 2025-01-02
+Universe Members: 503
+Missing Market Data: 17
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 381
+Selected: 10
+
+Rebalance: 2025-02-03
+Universe Members: 503
+Missing Market Data: 17
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 1
+Failed Liquidity Filter: 1
+Momentum Eligible: 341
+Selected: 10
+
+Rebalance: 2025-03-03
+Universe Members: 503
+Missing Market Data: 17
+Unusable Market Data: 1
+Insufficient History: 2
+Failed Price Filter: 2
+Failed Liquidity Filter: 0
+Momentum Eligible: 347
+Selected: 10
+
+Rebalance: 2025-04-01
+Universe Members: 503
+Missing Market Data: 17
+Unusable Market Data: 1
+Insufficient History: 0
+Failed Price Filter: 2
+Failed Liquidity Filter: 0
+Momentum Eligible: 295
+Selected: 10
+
+Rebalance: 2025-05-01
+Universe Members: 503
+Missing Market Data: 17
+Unusable Market Data: 1
+Insufficient History: 0
+Failed Price Filter: 3
+Failed Liquidity Filter: 1
+Momentum Eligible: 308
+Selected: 10
+
+Rebalance: 2025-06-02
+Universe Members: 503
+Missing Market Data: 16
+Unusable Market Data: 1
+Insufficient History: 0
+Failed Price Filter: 2
+Failed Liquidity Filter: 0
+Momentum Eligible: 295
+Selected: 10
+
+Rebalance: 2025-07-01
+Universe Members: 503
+Missing Market Data: 16
+Unusable Market Data: 1
+Insufficient History: 0
+Failed Price Filter: 1
+Failed Liquidity Filter: 0
+Momentum Eligible: 309
+Selected: 10
+
+Rebalance: 2025-08-01
+Universe Members: 503
+Missing Market Data: 13
+Unusable Market Data: 1
+Insufficient History: 0
+Failed Price Filter: 1
+Failed Liquidity Filter: 0
+Momentum Eligible: 319
+Selected: 10
+
+Rebalance: 2025-09-02
+Universe Members: 503
+Missing Market Data: 12
+Unusable Market Data: 0
+Insufficient History: 0
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 275
+Selected: 10
+
+Rebalance: 2025-10-01
+Universe Members: 503
+Missing Market Data: 12
+Unusable Market Data: 0
+Insufficient History: 0
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 285
+Selected: 10
+
+Rebalance: 2025-11-03
+Universe Members: 504
+Missing Market Data: 12
+Unusable Market Data: 0
+Insufficient History: 2
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 298
+Selected: 10
+
+Rebalance: 2025-12-01
+Universe Members: 503
+Missing Market Data: 11
+Unusable Market Data: 0
+Insufficient History: 3
+Failed Price Filter: 0
+Failed Liquidity Filter: 0
+Momentum Eligible: 230
+Selected: 10
+========================================
+
+DATA QUALITY VALIDATION
+Period: 2015-01-01 → 2025-12-31
+Universe: Historical S&P 500 Point-in-Time
+PIT members encountered: 724
+PIT universe peak: 506
+Missing price data: 115
+Unusable price series: 3
+Unusable symbols: CCE, HAR, PARA
+Fills involving unusable symbols: none
+Orders: 1522
+Fills: 1522
+Rejected orders: 0
+Stuck unvalued positions: none
+Stale last-price MTM after series end: no
+Final status: DATA_QUALITY_INCOMPLETE
+Research readiness: NOT READY
+Warnings:
+Missing market data: 115 unique constituents have no prices (peak 93 missing on a rebalance date, 120 dates). Prices loaded for 619 symbol(s). Universe membership was not dropped. Sample missing: AABA, ABMD, ADS, AGN, ALXN, ANSS, APC, ARG, ARNC, ATVI, AVB, BBBY, BCR, BF.B, BK, BRCM, BRK.B, BXLT, CA, CBS.
+Unusable price series: 3 symbol(s) failed price-quality or security-identity validation (reason=extreme_first_close, identity_mismatch; possible ticker identity mismatch). Series cannot fill; PIT membership was not dropped. Sample: CCE, HAR, PARA.
+Historical S&P 500 membership is applied.
+
+Market data is currently incomplete:
+115 historical constituents have no local price data.
+
+The current result is NOT a full S&P 500 historical backtest.
+Historical S&P 500 membership is applied.
+
+Price-quality validation failed for 3 constituent price series.
+
+Those series cannot fill. Universe membership was not dropped.
+
+Wrote audit/preliminary_strategy_baseline/fills.csv
+Wrote audit/preliminary_strategy_baseline/orders.csv
+Wrote audit/preliminary_strategy_baseline/equity_curve.csv
+Wrote audit/preliminary_strategy_baseline/data_quality.txt

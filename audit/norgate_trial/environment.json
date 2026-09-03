@@ -1,0 +1,43 @@
+{
+  "status": "PHASE 4 DATA QUALITY TRIAL",
+  "norgate_status": "NOT PROVEN",
+  "research_ready": false,
+  "verdict": "NOT_TESTABLE",
+  "checked_at": "2026-09-03",
+  "host": {
+    "os": "Darwin",
+    "os_release": "25.4.0",
+    "machine": "arm64",
+    "python": "3.14.6"
+  },
+  "norgatedata_importable": false,
+  "norgatedata_error": "ModuleNotFoundError: No module named 'norgatedata'",
+  "ndu_installed": false,
+  "windows_vm_apps": {
+    "parallels": false,
+    "utm": false,
+    "vmware_fusion": false,
+    "virtualbox": false,
+    "windows_app": false
+  },
+  "windows_vm_clis": {
+    "prlctl": false,
+    "utmctl": false,
+    "vmrun": false,
+    "VBoxManage": false
+  },
+  "credentials_in_dotenv": {
+    "NORGATE_USER": false,
+    "NORGATEDATA_ROOT": false
+  },
+  "data_provider": "CSV",
+  "production_norgate_adapter": false,
+  "stop_conditions": [
+    "Norgate requires an unavailable Windows environment (NDU is Windows-only).",
+    "Authentication/subscription/NDU is unavailable.",
+    "First-time Norgate access requires installing NDU and downloading the full subscribed US tape; that is a mass download into the VM and is out of scope for this repo.",
+    "Ticker history as prior-symbol occupancy is documented unavailable.",
+    "Licensing is a paid subscription; no license is configured."
+  ],
+  "notes": "Live Norgate fields were not invented. Local comparison in schema.csv is from existing coverage.csv only."
+}

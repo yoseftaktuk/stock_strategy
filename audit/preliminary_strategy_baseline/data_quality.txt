@@ -1,0 +1,30 @@
+DATA QUALITY VALIDATION
+Period: 2015-01-01 → 2025-12-31
+Universe: Historical S&P 500 Point-in-Time
+PIT members encountered: 724
+PIT universe peak: 506
+Missing price data: 115
+Unusable price series: 3
+Unusable symbols: CCE, HAR, PARA
+Fills involving unusable symbols: none
+Orders: 1522
+Fills: 1522
+Rejected orders: 0
+Stuck unvalued positions: none
+Stale last-price MTM after series end: no
+Final status: DATA_QUALITY_INCOMPLETE
+Research readiness: NOT READY
+Warnings:
+Missing market data: 115 unique constituents have no prices (peak 93 missing on a rebalance date, 120 dates). Prices loaded for 619 symbol(s). Universe membership was not dropped. Sample missing: AABA, ABMD, ADS, AGN, ALXN, ANSS, APC, ARG, ARNC, ATVI, AVB, BBBY, BCR, BF.B, BK, BRCM, BRK.B, BXLT, CA, CBS.
+Unusable price series: 3 symbol(s) failed price-quality or security-identity validation (reason=extreme_first_close, identity_mismatch; possible ticker identity mismatch). Series cannot fill; PIT membership was not dropped. Sample: CCE, HAR, PARA.
+Historical S&P 500 membership is applied.
+
+Market data is currently incomplete:
+115 historical constituents have no local price data.
+
+The current result is NOT a full S&P 500 historical backtest.
+Historical S&P 500 membership is applied.
+
+Price-quality validation failed for 3 constituent price series.
+
+Those series cannot fill. Universe membership was not dropped.
