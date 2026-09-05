@@ -12,78 +12,13 @@ remains a future Platinum gate.
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
-import time
 from pathlib import Path
 
-# #region agent log
-def _debug_log_import_path() -> None:
-    root = Path(__file__).resolve().parents[1]
-    app_dir = root / "app"
-    payload = {
-        "sessionId": "f8992d",
-        "runId": "pre-fix",
-        "hypothesisId": "A",
-        "location": "scripts/norgate_platinum_package_proof.py:import",
-        "message": "script import path before app import",
-        "timestamp": int(time.time() * 1000),
-        "data": {
-            "cwd": str(Path.cwd()),
-            "file": str(Path(__file__).resolve()),
-            "repo_root": str(root),
-            "app_dir_exists": app_dir.is_dir(),
-            "sys_path0": sys.path[0] if sys.path else "",
-            "sys_path": sys.path[:8],
-            "pythonpath": __import__("os").environ.get("PYTHONPATH", ""),
-            "app_in_sys_path": any(Path(item).resolve() == root for item in sys.path if item),
-        },
-    }
-    line = json.dumps(payload) + "\n"
-    print(f"DEBUG_IMPORT_PATH {json.dumps(payload['data'])}", flush=True)
-    for candidate in (
-        Path("/Users/natankatz/stock_stategy/.cursor/debug-f8992d.log"),
-        root / ".cursor" / "debug-f8992d.log",
-    ):
-        try:
-            candidate.parent.mkdir(parents=True, exist_ok=True)
-            with candidate.open("a", encoding="utf-8") as handle:
-                handle.write(line)
-        except OSError:
-            continue
-
-
-_debug_log_import_path()
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
-# #region agent log
-_post = {
-    "sessionId": "f8992d",
-    "runId": "post-fix",
-    "hypothesisId": "A",
-    "location": "scripts/norgate_platinum_package_proof.py:sys_path_insert",
-    "message": "repo root inserted on sys.path",
-    "timestamp": int(time.time() * 1000),
-    "data": {
-        "sys_path0": sys.path[0] if sys.path else "",
-        "app_in_sys_path": any(Path(item).resolve() == _ROOT for item in sys.path if item),
-        "app_dir_exists": (_ROOT / "app").is_dir(),
-    },
-}
-print(f"DEBUG_IMPORT_PATH_AFTER {json.dumps(_post['data'])}", flush=True)
-for _candidate in (
-    Path("/Users/natankatz/stock_stategy/.cursor/debug-f8992d.log"),
-    _ROOT / ".cursor" / "debug-f8992d.log",
-):
-    try:
-        _candidate.parent.mkdir(parents=True, exist_ok=True)
-        with _candidate.open("a", encoding="utf-8") as _handle:
-            _handle.write(json.dumps(_post) + "\n")
-    except OSError:
-        continue
-# #endregion
 
 from app.norgate_trial.client import (
     LookupResult,
