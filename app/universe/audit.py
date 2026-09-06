@@ -13,8 +13,8 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from app.data.price_quality import DEFAULT_EXTREME_FIRST_CLOSE
 from app.universe.memory import InMemoryUniverseProvider
+from app.universe.models import ConstituentMembership
 from app.universe.models import ConstituentMembership
 from app.universe.validation import MembershipIssue, MembershipValidationReport, validate_memberships
 
@@ -164,7 +164,6 @@ def audit_universe(
     price_windows: Mapping[str, PriceWindow] | None = None,
     investigate_symbols: Sequence[str] | None = None,
     price_gap_days: int = DEFAULT_PRICE_GAP_DAYS,
-    extreme_first_close: Decimal = DEFAULT_EXTREME_FIRST_CLOSE,
     start: date | None = None,
     end: date | None = None,
 ) -> UniverseAuditReport:
@@ -202,7 +201,6 @@ def audit_universe(
 
     late_price_start: list[str] = []
     membership_after_prices: list[str] = []
-    extreme_first_price: list[str] = []
     for symbol, periods in by_symbol.items():
         window = windows.get(symbol)
         earliest_start = min(item.start_date for item in periods)
@@ -228,12 +226,10 @@ def audit_universe(
             and (corpus_last - window.last_date).days > price_gap_days
         ):
             membership_after_prices.append(symbol)
-        if window.first_close is not None and window.first_close >= extreme_first_close:
-            extreme_first_price.append(symbol)
 
     late_price_start_t = tuple(sorted(set(late_price_start)))
     membership_after_prices_t = tuple(sorted(set(membership_after_prices)))
-    extreme_first_price_t = tuple(sorted(set(extreme_first_price)))
+    extreme_first_price_t: tuple[str, ...] = ()
 
     dates = list(rebalance_dates or ())
     if not dates and start is not None and end is not None:

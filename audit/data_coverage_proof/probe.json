@@ -1,0 +1,1135 @@
+{
+  "round": 13,
+  "assessment_date": "2026-09-06",
+  "production_modified": false,
+  "data_layer_implementation_started": false,
+  "environment": {
+    "probe_date": "2026-09-06",
+    "os": "Darwin",
+    "os_release": "25.4.0",
+    "machine": "arm64",
+    "python": "3.14.6",
+    "norgatedata_importable": false,
+    "norgatedata_error": "ModuleNotFoundError: No module named 'norgatedata'",
+    "ndu_running": null,
+    "ndu_installed": false,
+    "ndu_path_hits": [],
+    "databases": [],
+    "windows_host": false,
+    "windows_vm_available": true,
+    "vm_apps": {
+      "parallels": true,
+      "utm": false,
+      "vmware_fusion": false,
+      "virtualbox": false,
+      "windows_app": false
+    },
+    "vm_clis": {
+      "prlctl": true,
+      "utmctl": false,
+      "vmrun": false,
+      "VBoxManage": false
+    },
+    "credential_env_present": {
+      "TIINGO_API_KEY": false,
+      "TIINGO_TOKEN": false,
+      "SHARADAR_API_KEY": false,
+      "NASDAQ_DATA_LINK_API_KEY": false,
+      "QUANDL_API_KEY": false,
+      "NORGATE_USER": false,
+      "NORGATEDATA_ROOT": false,
+      "POLYGON_API_KEY": false
+    },
+    "credential_env_file_present": {
+      "TIINGO_API_KEY": false,
+      "TIINGO_TOKEN": false,
+      "SHARADAR_API_KEY": false,
+      "NASDAQ_DATA_LINK_API_KEY": false,
+      "QUANDL_API_KEY": false,
+      "NORGATE_USER": false,
+      "NORGATEDATA_ROOT": false,
+      "POLYGON_API_KEY": false
+    },
+    "env_file_exists": true,
+    "sharadar_credentials_present": false,
+    "nasdaqdatalink_importable": false,
+    "nasdaqdatalink_error": "ModuleNotFoundError: No module named 'nasdaqdatalink'",
+    "live_norgate_queryable": false,
+    "norgate_platinum_access": "ACCESS_BLOCKED",
+    "sharadar_actions_access": "NOT_AVAILABLE",
+    "platinum_entitlement_proven": false,
+    "notes": [
+      "Platinum entitlement is not proven from Trial artifacts.",
+      "Trial live evidence (Windows 11 ARM64, 2026-09-03) is not this environment.",
+      "No Sharadar / Nasdaq Data Link / Quandl credentials in env or .env."
+    ]
+  },
+  "norgate_field_semantics": {
+    "live_probe_attempted": false,
+    "live_probe_result": "NOT EXECUTED \u2014 norgatedata/NDU unavailable",
+    "fields": {
+      "assetid": "DOCUMENTED integer vendor ID. Trial live for some listed names. Platinum: not live here.",
+      "symbol": "DOCUMENTED current symbol only. Prior symbols not provided.",
+      "date": "DOCUMENTED",
+      "open": "DOCUMENTED",
+      "high": "DOCUMENTED",
+      "low": "DOCUMENTED",
+      "close": "DOCUMENTED",
+      "volume": "DOCUMENTED consolidated tape",
+      "TOTALRETURN": "DOCUMENTED default price_timeseries mode. Trial used it. Platinum: not live here.",
+      "CAPITAL": "DOCUMENTED split-adjusted, not ordinary-dividend-adjusted. Not live-proven here."
+    },
+    "price_roles": {
+      "SIGNAL": {
+        "required": "TOTALRETURN Close",
+        "live_proven": false,
+        "status": "UNKNOWN"
+      },
+      "MARK": {
+        "required": "CAPITAL Close",
+        "live_proven": false,
+        "status": "UNKNOWN"
+      },
+      "EXECUTION": {
+        "required": "next-session CAPITAL Open",
+        "live_proven": false,
+        "status": "UNKNOWN"
+      },
+      "TERMINAL": {
+        "required": "CAPITAL Close",
+        "live_proven": false,
+        "status": "UNKNOWN"
+      }
+    },
+    "trial_is_not_platinum": true,
+    "status": "BLOCKED"
+  },
+  "identity": {
+    "cases": {
+      "case_1_sq_xyz": {
+        "expected": "same economic security",
+        "internal_security_ids": {
+          "SQ_2024": {
+            "resolved": true,
+            "security_id": "catalog:block-inc-class-a",
+            "ticker_as_of": "SQ",
+            "listing_id": "_:SQ:2015-11-19",
+            "listing_ticker": "SQ",
+            "valid_from": "2015-11-19",
+            "valid_to": "2025-01-21",
+            "position_key": "security:catalog:block-inc-class-a"
+          },
+          "XYZ_2025": {
+            "resolved": true,
+            "security_id": "catalog:block-inc-class-a",
+            "ticker_as_of": "XYZ",
+            "listing_id": "_:XYZ:2025-01-21",
+            "listing_ticker": "XYZ",
+            "valid_from": "2025-01-21",
+            "valid_to": null,
+            "position_key": "security:catalog:block-inc-class-a"
+          }
+        },
+        "same_security_id": true,
+        "same_position_key": true,
+        "distinct_listings": true,
+        "vendor_fetch_symbols": [
+          "SQ",
+          "XYZ",
+          "XYZ"
+        ],
+        "yahoo_csv": {
+          "SQ": {
+            "exists": false,
+            "first_date": null,
+            "last_date": null,
+            "sessions": 0
+          },
+          "XYZ": {
+            "exists": true,
+            "first_date": null,
+            "last_date": null,
+            "sessions": 0
+          }
+        },
+        "yahoo_coverage_row": {
+          "security_id": "",
+          "seed_key": "block-inc-class-a",
+          "historical_ticker": "XYZ",
+          "pit_start": "2025-07-23",
+          "pit_end": "",
+          "pit_intervals": "2025-07-23\u2192open",
+          "identity_status": "RESOLVED",
+          "market_data_status": "available",
+          "vendor_symbol": "XYZ",
+          "price_start": "2015-11-19",
+          "price_end": "2025-12-31",
+          "coverage_days": "162",
+          "expected_days": "162",
+          "coverage_ratio": "1.0000",
+          "quality_status": "valid",
+          "reason": "",
+          "confidence": "high",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "true",
+          "notes": "Local prices cover the PIT membership interval in this window."
+        },
+        "norgate_trial_2026_09_03": "XYZ assetid=2104402 LIVE_PARTIAL; SQ NOT_FOUND (prepend). Not Platinum.",
+        "norgate_platinum_live": "BLOCKED",
+        "sharadar_permaticker_live": "NOT_AVAILABLE",
+        "vendor_id_relationship": "UNKNOWN",
+        "status": "PARTIAL",
+        "notes": "Internal Security Master maps SQ occupancy and XYZ occupancy to the same security_id without ticker guessing. Vendor assetid/permaticker continuity is not live-proven on Platinum or Sharadar."
+      },
+      "case_2_spectra_se_vs_sea": {
+        "expected": "different securities; ticker equality must not alias",
+        "internal_security_ids": {
+          "SE_2015_spectra": {
+            "resolved": true,
+            "security_id": "catalog:spectra-energy",
+            "ticker_as_of": "SE",
+            "listing_id": "_:SE:2007-01-03",
+            "listing_ticker": "SE",
+            "valid_from": "2007-01-03",
+            "valid_to": "2017-02-27",
+            "position_key": "security:catalog:spectra-energy"
+          },
+          "SE_2018_sea": {
+            "resolved": true,
+            "security_id": "catalog:sea-limited",
+            "ticker_as_of": "SE",
+            "listing_id": "_:SE:2017-10-20",
+            "listing_ticker": "SE",
+            "valid_from": "2017-10-20",
+            "valid_to": null,
+            "position_key": "security:catalog:sea-limited"
+          },
+          "SE_2017_gap": {
+            "resolved": false,
+            "security_id": null,
+            "ticker_as_of": "SE",
+            "listing_id": "_:SE:occupancy-unknown",
+            "listing_ticker": "SE",
+            "valid_from": "2017-06-01",
+            "valid_to": null,
+            "position_key": "listing:_:SE:occupancy-unknown"
+          }
+        },
+        "different_security_id": true,
+        "gap_unresolved": true,
+        "yahoo_csv": {
+          "exists": true,
+          "first_date": null,
+          "last_date": null,
+          "sessions": 0
+        },
+        "yahoo_coverage_row": {
+          "security_id": "",
+          "seed_key": "spectra-energy",
+          "historical_ticker": "SE",
+          "pit_start": "2007-01-03",
+          "pit_end": "2017-02-27",
+          "pit_intervals": "2007-01-03\u21922017-02-27",
+          "identity_status": "RESOLVED",
+          "market_data_status": "missing",
+          "vendor_symbol": "SE",
+          "price_start": "2017-10-20",
+          "price_end": "2025-12-31",
+          "coverage_days": "0",
+          "expected_days": "788",
+          "coverage_ratio": "0.0000",
+          "quality_status": "not_applicable",
+          "reason": "C_ticker_recycled",
+          "confidence": "high",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "true",
+          "notes": "Same listing ticker maps to more than one security."
+        },
+        "yahoo_aliasing": "Yahoo SE.csv is Sea from 2017-10-20, not Spectra.",
+        "norgate_trial_2026_09_03": "Sea SE assetid=2326776 LIVE_PARTIAL; SE-201702 Spectra NOT_FOUND.",
+        "norgate_platinum_live": "BLOCKED",
+        "status": "PARTIAL",
+        "notes": "Internal occupancy prevents aliasing. Spectra historical prices are missing on Yahoo and were NOT_FOUND on Norgate Trial. Platinum presence is unproven."
+      },
+      "case_3_esrx_ci": {
+        "expected": "predecessor remains distinct; do not map ESRX to CI",
+        "internal_security_ids": {
+          "ESRX_2018": {
+            "resolved": true,
+            "security_id": "catalog:express-scripts",
+            "ticker_as_of": "ESRX",
+            "listing_id": "_:ESRX:2003-09-26",
+            "listing_ticker": "ESRX",
+            "valid_from": "2003-09-26",
+            "valid_to": "2018-12-21",
+            "position_key": "security:catalog:express-scripts"
+          },
+          "ESRX_after_listing": {
+            "resolved": false,
+            "security_id": null,
+            "ticker_as_of": "ESRX",
+            "listing_id": "_:ESRX:occupancy-unknown",
+            "listing_ticker": "ESRX",
+            "valid_from": "2019-01-02",
+            "valid_to": null,
+            "position_key": "listing:_:ESRX:occupancy-unknown"
+          },
+          "CI_2018": {
+            "resolved": false,
+            "security_id": null,
+            "ticker_as_of": "CI",
+            "listing_id": "_:CI:occupancy-unknown",
+            "listing_ticker": "CI",
+            "valid_from": "2018-06-01",
+            "valid_to": null,
+            "position_key": "listing:_:CI:occupancy-unknown"
+          }
+        },
+        "esrx_resolved": true,
+        "ci_not_aliased": true,
+        "esrx_after_unresolved": true,
+        "catalog_status": "DELISTED",
+        "yahoo_csv": {
+          "ESRX": {
+            "exists": true,
+            "first_date": null,
+            "last_date": null,
+            "sessions": 0
+          },
+          "CI": {
+            "exists": true,
+            "first_date": null,
+            "last_date": null,
+            "sessions": 0
+          }
+        },
+        "yahoo_coverage_row": {
+          "security_id": "",
+          "seed_key": "express-scripts",
+          "historical_ticker": "ESRX",
+          "pit_start": "2003-09-26",
+          "pit_end": "2018-12-21",
+          "pit_intervals": "2003-09-26\u21922018-12-21",
+          "identity_status": "RESOLVED",
+          "market_data_status": "available",
+          "vendor_symbol": "ESRX",
+          "price_start": "2013-07-08",
+          "price_end": "2018-12-21",
+          "coverage_days": "1450",
+          "expected_days": "1450",
+          "coverage_ratio": "1.0000",
+          "quality_status": "valid",
+          "reason": "F_delisted",
+          "confidence": "high",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "true",
+          "notes": "Security listing ended; local series covers the PIT interval."
+        },
+        "norgate_trial_2026_09_03": "ESRX and ESRX-201812 NOT_FOUND.",
+        "norgate_platinum_live": "BLOCKED",
+        "merger_terms": "UNRESOLVED",
+        "status": "PARTIAL",
+        "notes": "Internal identity keeps ESRX distinct from CI. Local ESRX.csv covers 2013-07-08 through 2018-12-21 (coverage audit). Cigna is not seeded. Acquisition economics are not available from any connected source."
+      },
+      "case_4_atvi": {
+        "expected": "acquired/delisted Activision remains its own security",
+        "internal_security_ids": {
+          "ATVI_2018": {
+            "resolved": false,
+            "security_id": null,
+            "ticker_as_of": "ATVI",
+            "listing_id": "_:ATVI:occupancy-unknown",
+            "listing_ticker": "ATVI",
+            "valid_from": "2018-06-01",
+            "valid_to": null,
+            "position_key": "listing:_:ATVI:occupancy-unknown"
+          },
+          "MSFT_2023": {
+            "resolved": false,
+            "security_id": null,
+            "ticker_as_of": "MSFT",
+            "listing_id": "_:MSFT:occupancy-unknown",
+            "listing_ticker": "MSFT",
+            "valid_from": "2023-10-01",
+            "valid_to": null,
+            "position_key": "listing:_:MSFT:occupancy-unknown"
+          }
+        },
+        "atvi_seeded": false,
+        "atvi_unresolved": true,
+        "msft_not_seeded": true,
+        "yahoo_csv": {
+          "exists": false,
+          "first_date": null,
+          "last_date": null,
+          "sessions": 0
+        },
+        "yahoo_coverage_row": {
+          "security_id": "",
+          "seed_key": "",
+          "historical_ticker": "ATVI",
+          "pit_start": "2015-08-31",
+          "pit_end": "2023-10-18",
+          "pit_intervals": "2015-08-31\u21922023-10-18",
+          "identity_status": "UNRESOLVED",
+          "market_data_status": "missing",
+          "vendor_symbol": "ATVI",
+          "price_start": "",
+          "price_end": "",
+          "coverage_days": "0",
+          "expected_days": "2970",
+          "coverage_ratio": "0.0000",
+          "quality_status": "not_applicable",
+          "reason": "D_unresolved_identity",
+          "confidence": "low",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "false",
+          "notes": "No Security Master row and no local CSV under the PIT ticker."
+        },
+        "norgate_trial_2026_09_03": "ATVI and ATVI-202310 NOT_FOUND.",
+        "norgate_platinum_live": "BLOCKED",
+        "corporate_actions_live": "NOT_AVAILABLE",
+        "merger_terms": "UNRESOLVED",
+        "status": "FAIL",
+        "notes": "ATVI is not in the known-identities catalog. No local CSV. Trial suffix lookup failed. Merger cash/share terms cannot be invented."
+      },
+      "case_5_share_classes": {
+        "expected": "BRK.B and BF.B uniquely identified",
+        "internal_security_ids": {
+          "BRK.B": {
+            "resolved": true,
+            "security_id": "catalog:berkshire-hathaway-class-b",
+            "ticker_as_of": "BRK.B",
+            "listing_id": "_:BRK.B:2010-02-16",
+            "listing_ticker": "BRK.B",
+            "valid_from": "2010-02-16",
+            "valid_to": null,
+            "position_key": "security:catalog:berkshire-hathaway-class-b"
+          },
+          "BF.B": {
+            "resolved": true,
+            "security_id": "catalog:brown-forman-class-b",
+            "ticker_as_of": "BF.B",
+            "listing_id": "_:BF.B:1996-01-02",
+            "listing_ticker": "BF.B",
+            "valid_from": "1996-01-02",
+            "valid_to": null,
+            "position_key": "security:catalog:brown-forman-class-b"
+          },
+          "BRK.A": {
+            "resolved": false,
+            "security_id": null,
+            "ticker_as_of": "BRK.A",
+            "listing_id": "_:BRK.A:occupancy-unknown",
+            "listing_ticker": "BRK.A",
+            "valid_from": "2015-06-01",
+            "valid_to": null,
+            "position_key": "listing:_:BRK.A:occupancy-unknown"
+          },
+          "BF.A": {
+            "resolved": false,
+            "security_id": null,
+            "ticker_as_of": "BF.A",
+            "listing_id": "_:BF.A:occupancy-unknown",
+            "listing_ticker": "BF.A",
+            "valid_from": "2015-06-01",
+            "valid_to": null,
+            "position_key": "listing:_:BF.A:occupancy-unknown"
+          }
+        },
+        "class_b_distinct": true,
+        "class_a_unseeded": true,
+        "yahoo_symbols": {
+          "BRK.B": [
+            "BRK.B",
+            "BRK-B"
+          ],
+          "BF.B": [
+            "BF.B",
+            "BF-B"
+          ],
+          "preferred_BRK.B": "BRK-B",
+          "preferred_BF.B": "BF-B"
+        },
+        "yahoo_csv": {
+          "BRK-B": {
+            "exists": true,
+            "first_date": null,
+            "last_date": null,
+            "sessions": 0
+          },
+          "BF-B": {
+            "exists": true,
+            "first_date": null,
+            "last_date": null,
+            "sessions": 0
+          }
+        },
+        "norgate_assetid_live": "UNKNOWN",
+        "sharadar_permaticker_live": "UNKNOWN",
+        "status": "PARTIAL",
+        "notes": "Internal catalog distinguishes Class B listings and Yahoo hyphen symbols. Vendor IDs (Norgate assetid / Sharadar permaticker) and Class A uniqueness are not live-proven."
+      },
+      "case_6_ticker_recycle": {
+        "expected": "two occupancy periods do not collapse into one canonical security",
+        "primary_example": "SE Spectra vs Sea (case 2)",
+        "secondary_example": "HAR Harman vs later namesake",
+        "harman": {
+          "resolved": true,
+          "security_id": "catalog:harman-international",
+          "ticker_as_of": "HAR",
+          "listing_id": "_:HAR:2006-02-01",
+          "listing_ticker": "HAR",
+          "valid_from": "2006-02-01",
+          "valid_to": "2017-03-13",
+          "position_key": "security:catalog:harman-international"
+        },
+        "har_after": {
+          "resolved": false,
+          "security_id": null,
+          "ticker_as_of": "HAR",
+          "listing_id": "_:HAR:occupancy-unknown",
+          "listing_ticker": "HAR",
+          "valid_from": "2020-06-01",
+          "valid_to": null,
+          "position_key": "listing:_:HAR:occupancy-unknown"
+        },
+        "harman_resolved": true,
+        "later_har_unresolved": true,
+        "yahoo_csv": {
+          "exists": true,
+          "first_date": null,
+          "last_date": null,
+          "sessions": 0
+        },
+        "yahoo_coverage_row": {
+          "security_id": "",
+          "seed_key": "harman-international",
+          "historical_ticker": "HAR",
+          "pit_start": "2006-02-01",
+          "pit_end": "2017-03-13",
+          "pit_intervals": "2006-02-01\u21922017-03-13",
+          "identity_status": "RESOLVED",
+          "market_data_status": "unusable",
+          "vendor_symbol": "HAR",
+          "price_start": "2013-07-08",
+          "price_end": "2022-03-02",
+          "coverage_days": "0",
+          "expected_days": "802",
+          "coverage_ratio": "0.0000",
+          "quality_status": "unusable",
+          "reason": "H_identity_validation_failed",
+          "confidence": "high",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "true",
+          "notes": "identity_mismatch"
+        },
+        "norgate_trial_2026_09_03": "HAR and HAR-201703 NOT_FOUND.",
+        "status": "PARTIAL",
+        "notes": "SE occupancies are distinct internally. HAR occupancy after 2017-03-13 does not resolve to Harman. Local HAR.csv is identity_mismatch (not Harman). Vendor recycle-safe fetch by assetid is not live-proven on Platinum."
+      },
+      "case_7_delisted": {
+        "expected": "a security that no longer trades remains in the research universe",
+        "examples": {
+          "ESRX": {
+            "seed_key": "express-scripts",
+            "status": "DELISTED",
+            "ref": {
+              "resolved": true,
+              "security_id": "catalog:express-scripts",
+              "ticker_as_of": "ESRX",
+              "listing_id": "_:ESRX:2003-09-26",
+              "listing_ticker": "ESRX",
+              "valid_from": "2003-09-26",
+              "valid_to": "2018-12-21",
+              "position_key": "security:catalog:express-scripts"
+            },
+            "yahoo_csv": {
+              "exists": true,
+              "first_date": null,
+              "last_date": null,
+              "sessions": 0
+            },
+            "last_quoted_yahoo": null,
+            "delisting_proceeds": "UNKNOWN",
+            "last_close_proxy_only": true
+          },
+          "ATVI": {
+            "seed_key": null,
+            "status": "UNSEEDED",
+            "ref": {
+              "resolved": false,
+              "security_id": null,
+              "ticker_as_of": "ATVI",
+              "listing_id": "_:ATVI:occupancy-unknown",
+              "listing_ticker": "ATVI",
+              "valid_from": "2018-06-01",
+              "valid_to": null,
+              "position_key": "listing:_:ATVI:occupancy-unknown"
+            },
+            "yahoo_csv": {
+              "exists": false,
+              "first_date": null,
+              "last_date": null,
+              "sessions": 0
+            },
+            "delisting_proceeds": "UNKNOWN"
+          },
+          "HAR": {
+            "seed_key": "harman-international",
+            "status": "DELISTED",
+            "ref": {
+              "resolved": true,
+              "security_id": "catalog:harman-international",
+              "ticker_as_of": "HAR",
+              "listing_id": "_:HAR:2006-02-01",
+              "listing_ticker": "HAR",
+              "valid_from": "2006-02-01",
+              "valid_to": "2017-03-13",
+              "position_key": "security:catalog:harman-international"
+            },
+            "yahoo_csv": {
+              "exists": true,
+              "first_date": null,
+              "last_date": null,
+              "sessions": 0
+            },
+            "yahoo_usable_for_harman": false,
+            "delisting_proceeds": "UNKNOWN"
+          }
+        },
+        "norgate_delisted_class": "DOCUMENTED (US Equities Delisted). LIVE Platinum: BLOCKED. Trial pre-window NOT_FOUND.",
+        "status": "PARTIAL",
+        "notes": "Catalog can retain DELISTED securities (ESRX, HAR). Yahoo supplies ESRX last close as a proxy only. True delisting proceeds are unavailable."
+      }
+    },
+    "listed_controls_yahoo_only": {
+      "AAPL": {
+        "exists": true,
+        "first_date": null,
+        "last_date": null,
+        "sessions": 0,
+        "coverage": {
+          "security_id": "",
+          "seed_key": "",
+          "historical_ticker": "AAPL",
+          "pit_start": "1996-01-02",
+          "pit_end": "",
+          "pit_intervals": "1996-01-02\u2192open",
+          "identity_status": "UNRESOLVED",
+          "market_data_status": "available",
+          "vendor_symbol": "AAPL",
+          "price_start": "2013-07-08",
+          "price_end": "2025-12-31",
+          "coverage_days": "4018",
+          "expected_days": "4018",
+          "coverage_ratio": "1.0000",
+          "quality_status": "valid",
+          "reason": "D_unresolved_identity",
+          "confidence": "low",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "true",
+          "notes": "Local prices cover the PIT membership interval in this window."
+        }
+      },
+      "MSFT": {
+        "exists": true,
+        "first_date": null,
+        "last_date": null,
+        "sessions": 0,
+        "coverage": {
+          "security_id": "",
+          "seed_key": "",
+          "historical_ticker": "MSFT",
+          "pit_start": "1996-01-02",
+          "pit_end": "",
+          "pit_intervals": "1996-01-02\u2192open",
+          "identity_status": "UNRESOLVED",
+          "market_data_status": "available",
+          "vendor_symbol": "MSFT",
+          "price_start": "2013-07-08",
+          "price_end": "2025-12-31",
+          "coverage_days": "4018",
+          "expected_days": "4018",
+          "coverage_ratio": "1.0000",
+          "quality_status": "valid",
+          "reason": "D_unresolved_identity",
+          "confidence": "low",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "true",
+          "notes": "Local prices cover the PIT membership interval in this window."
+        }
+      },
+      "CELG": {
+        "exists": false,
+        "first_date": null,
+        "last_date": null,
+        "sessions": 0,
+        "coverage": {
+          "security_id": "",
+          "seed_key": "",
+          "historical_ticker": "CELG",
+          "pit_start": "2006-11-06",
+          "pit_end": "2019-11-21",
+          "pit_intervals": "2006-11-06\u21922019-11-21",
+          "identity_status": "UNRESOLVED",
+          "market_data_status": "missing",
+          "vendor_symbol": "CELG",
+          "price_start": "",
+          "price_end": "",
+          "coverage_days": "0",
+          "expected_days": "1785",
+          "coverage_ratio": "0.0000",
+          "quality_status": "not_applicable",
+          "reason": "D_unresolved_identity",
+          "confidence": "low",
+          "rebalance_encountered": "true",
+          "local_listing_csv": "false",
+          "notes": "No Security Master row and no local CSV under the PIT ticker."
+        },
+        "ref": {
+          "resolved": false,
+          "security_id": null,
+          "ticker_as_of": "CELG",
+          "listing_id": "_:CELG:occupancy-unknown",
+          "listing_ticker": "CELG",
+          "valid_from": "2018-06-01",
+          "valid_to": null,
+          "position_key": "listing:_:CELG:occupancy-unknown"
+        }
+      }
+    }
+  },
+  "pit": {
+    "canonical_source": "unofficial fja05680 data/raw/sp500_historical.csv",
+    "official_spdji": false,
+    "memberships_loaded": true,
+    "source_version_sha256": "39a9202c9ef69a74c0ff07e2113ad41fb6da7c8c5b6cd9541f0185fb4391e717",
+    "load_error": "",
+    "catalog_seed_count": 26,
+    "coverage_unresolved_identity": 716,
+    "coverage_pit_securities": 754,
+    "norgate_spx_crosscheck": "BLOCKED \u2014 not live-queried",
+    "sharadar_sp500_crosscheck": "NOT_AVAILABLE \u2014 no credentials; SP500 may require bundle SKU",
+    "samples": [
+      {
+        "ticker": "AAPL",
+        "as_of": "2015-01-02",
+        "role": "current_constituent",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "1996-01-02",
+          "end": ""
+        },
+        "internal_security_id": null,
+        "identity_resolved": false,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "available",
+        "yahoo_price_start": "2013-07-08",
+        "yahoo_price_end": "2025-12-31"
+      },
+      {
+        "ticker": "MSFT",
+        "as_of": "2020-06-15",
+        "role": "current_constituent",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "1996-01-02",
+          "end": ""
+        },
+        "internal_security_id": null,
+        "identity_resolved": false,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "available",
+        "yahoo_price_start": "2013-07-08",
+        "yahoo_price_end": "2025-12-31"
+      },
+      {
+        "ticker": "ATVI",
+        "as_of": "2018-06-01",
+        "role": "historical_then_acquired",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "2015-08-31",
+          "end": "2023-10-18"
+        },
+        "internal_security_id": null,
+        "identity_resolved": false,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "missing",
+        "yahoo_price_start": "",
+        "yahoo_price_end": ""
+      },
+      {
+        "ticker": "ESRX",
+        "as_of": "2016-06-01",
+        "role": "historical_then_acquired",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "2003-09-26",
+          "end": "2018-12-21"
+        },
+        "internal_security_id": "catalog:express-scripts",
+        "identity_resolved": true,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "available",
+        "yahoo_price_start": "2013-07-08",
+        "yahoo_price_end": "2018-12-21"
+      },
+      {
+        "ticker": "SE",
+        "as_of": "2015-06-01",
+        "role": "historical_constituent_spectra",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "2007-01-03",
+          "end": "2017-02-27"
+        },
+        "internal_security_id": "catalog:spectra-energy",
+        "identity_resolved": true,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "missing",
+        "yahoo_price_start": "2017-10-20",
+        "yahoo_price_end": "2025-12-31"
+      },
+      {
+        "ticker": "SE",
+        "as_of": "2020-06-01",
+        "role": "later_recycled_ticker_sea",
+        "pit_membership": false,
+        "pit_interval": {
+          "start": "2007-01-03",
+          "end": "2017-02-27"
+        },
+        "internal_security_id": "catalog:sea-limited",
+        "identity_resolved": true,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "missing",
+        "yahoo_price_start": "2017-10-20",
+        "yahoo_price_end": "2025-12-31"
+      },
+      {
+        "ticker": "HAR",
+        "as_of": "2016-06-01",
+        "role": "historical_then_acquired",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "2006-02-01",
+          "end": "2017-03-13"
+        },
+        "internal_security_id": "catalog:harman-international",
+        "identity_resolved": true,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "unusable",
+        "yahoo_price_start": "2013-07-08",
+        "yahoo_price_end": "2022-03-02"
+      },
+      {
+        "ticker": "BRK.B",
+        "as_of": "2015-01-02",
+        "role": "share_class",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "2010-02-16",
+          "end": ""
+        },
+        "internal_security_id": "catalog:berkshire-hathaway-class-b",
+        "identity_resolved": true,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "available_other_ticker",
+        "yahoo_price_start": "2013-07-08",
+        "yahoo_price_end": "2025-12-31"
+      },
+      {
+        "ticker": "BF.B",
+        "as_of": "2015-01-02",
+        "role": "share_class",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "1996-01-02",
+          "end": ""
+        },
+        "internal_security_id": "catalog:brown-forman-class-b",
+        "identity_resolved": true,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "available_other_ticker",
+        "yahoo_price_start": "2013-07-08",
+        "yahoo_price_end": "2025-12-31"
+      },
+      {
+        "ticker": "CELG",
+        "as_of": "2018-06-01",
+        "role": "historical_then_acquired",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "2006-11-06",
+          "end": "2019-11-21"
+        },
+        "internal_security_id": null,
+        "identity_resolved": false,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "missing",
+        "yahoo_price_start": "",
+        "yahoo_price_end": ""
+      },
+      {
+        "ticker": "XYZ",
+        "as_of": "2025-08-01",
+        "role": "ticker_changed_current",
+        "pit_membership": true,
+        "pit_interval": {
+          "start": "2025-07-23",
+          "end": ""
+        },
+        "internal_security_id": "catalog:block-inc-class-a",
+        "identity_resolved": true,
+        "vendor_norgate_assetid": "BLOCKED",
+        "vendor_sharadar_permaticker": "NOT_AVAILABLE",
+        "historical_price_availability": "available",
+        "yahoo_price_start": "2015-11-19",
+        "yahoo_price_end": "2025-12-31"
+      }
+    ],
+    "status": "PARTIAL",
+    "notes": "PIT membership can be reconstructed from unofficial fja05680. Join to canonical security_id works only for seeded catalog names. Join to vendor identifiers is not live-proven. Current S&P 500 list was not used."
+  },
+  "corporate_actions": {
+    "documented_capability": "SHARADAR/ACTIONS public columns date, action, ticker, name, value, contraticker, contraname",
+    "live_access": "NOT_AVAILABLE",
+    "operational_status": "UNKNOWN",
+    "event_types": {
+      "split": {
+        "documented_fields": [
+          "date",
+          "action=split",
+          "ticker",
+          "name",
+          "value"
+        ],
+        "maps_to": "CorporateAction.factor",
+        "live_proven": false,
+        "status": "UNKNOWN"
+      },
+      "reverse_split": {
+        "documented_fields": [
+          "date",
+          "action=split",
+          "value < 1 expected but not live-proven"
+        ],
+        "maps_to": "CorporateAction.factor",
+        "live_proven": false,
+        "status": "UNKNOWN"
+      },
+      "dividend": {
+        "documented_fields": [
+          "date",
+          "action (dividend labels)",
+          "value as amount"
+        ],
+        "maps_to": "CorporateAction.amount on ex-date",
+        "ex_date_live_proven": false,
+        "live_proven": false,
+        "status": "UNKNOWN"
+      },
+      "merger": {
+        "documented_fields": [
+          "action=acquisition",
+          "contraticker",
+          "contraname",
+          "value UNKNOWN semantics"
+        ],
+        "cash_per_share": "UNKNOWN",
+        "share_conversion_ratio": "UNKNOWN",
+        "live_proven": false,
+        "status": "UNRESOLVED"
+      },
+      "acquisition": {
+        "documented_fields": [
+          "acquisition events marketed"
+        ],
+        "terms": "UNKNOWN",
+        "live_proven": false,
+        "status": "UNRESOLVED"
+      },
+      "delisting": {
+        "documented_fields": [
+          "delist reasons marketed; proceeds not in public columns"
+        ],
+        "proceeds": "UNKNOWN",
+        "last_quoted_close_proxy": true,
+        "live_proven": false,
+        "status": "PARTIAL"
+      }
+    },
+    "norgate_complement": {
+      "split_factor": "UNSUPPORTED (FAQ: no direct CA details; capital_event boolean only)",
+      "dividend_amount": "PARTIAL documented (column when not TOTALRETURN; entitlement = day before ex-date). Not live-proven here.",
+      "merger_terms": "UNSUPPORTED (FAQ identity rules only)",
+      "delisting_proceeds": "PARTIAL (last bar; FAQ: no delisting return)",
+      "live_proven_this_environment": false
+    },
+    "split_proof": {
+      "forward_split": "NOT TESTED \u2014 no credentials",
+      "reverse_split": "NOT TESTED \u2014 no credentials",
+      "do_not_derive_from_adjusted_prices": true
+    },
+    "dividend_proof": {
+      "amount_per_share": "NOT TESTED \u2014 no credentials",
+      "economic_ex_date": "NOT TESTED \u2014 no credentials",
+      "security_identity": "NOT TESTED \u2014 no credentials"
+    },
+    "merger_proof": {
+      "cash_per_share": "UNRESOLVED",
+      "share_conversion_ratio": "UNRESOLVED",
+      "identity_relationship": "UNKNOWN until live ACTIONS rows",
+      "effective_date": "UNKNOWN",
+      "prevents_research_grade_accounting": true,
+      "explicit_unresolved_event_policy": "Project may continue infrastructure with UNRESOLVED acquisitions; it may not invent proceeds or conversion ratios."
+    },
+    "delisting_proof": {
+      "known_proceeds": false,
+      "fallback": "last quoted close as proxy only",
+      "dedicated_delisting_return": "UNAVAILABLE on Norgate (FAQ) and unproven on Sharadar",
+      "delisting_proceeds": "PARTIAL"
+    }
+  },
+  "norgate_trial_prior_evidence": {
+    "evidence_type": "LIVE",
+    "probe_date": "2026-09-03",
+    "os": "Windows",
+    "databases": [
+      "Cash Commodities",
+      "Continuous Futures",
+      "Economic",
+      "Forex Spot",
+      "US Equities",
+      "US Equities Delisted",
+      "US Indices",
+      "World Indices"
+    ],
+    "known_case_results": {
+      "SE": {
+        "status": "NOT_TESTABLE",
+        "expected": "SE+2015 \u2192 Spectra Energy (assetid A); SE+2018 \u2192 Sea Limited (assetid B). FAIL if one ID or current-ticker-only.",
+        "observed": "current SE assetid=2326776; suffix SE-201702 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none | current SE assetid=2326776; identity=LIVE_PARTIAL coverage=NOT_TESTABLE source=current_ticker",
+        "spectra_row": "NOT_TESTABLE",
+        "sea_row": "LIVE_PARTIAL"
+      },
+      "HAR": {
+        "status": "NOT_TESTABLE",
+        "expected": "Harman International distinct from current HAR; bars during 2006\u20132017 belonging to Harman.",
+        "observed": "current HAR assetid=NOT_FOUND; suffix HAR-201703 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none | current HAR assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none",
+        "harman_row": "NOT_TESTABLE",
+        "current_row": "NOT_TESTABLE"
+      },
+      "ESRX": {
+        "status": "NOT_TESTABLE",
+        "expected": "Express Scripts own security through ~2018-12; ESRX \u2260 CI.",
+        "observed": "current ESRX assetid=NOT_FOUND; suffix ESRX-201812 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none"
+      },
+      "ATVI": {
+        "status": "NOT_TESTABLE",
+        "expected": "Activision bars, not MSFT.",
+        "observed": "current ATVI assetid=NOT_FOUND; suffix ATVI-202310 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none"
+      },
+      "CELG": {
+        "status": "NOT_TESTABLE",
+        "expected": "Celgene bars, not BMY.",
+        "observed": "current CELG assetid=NOT_FOUND; suffix CELG-201911 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none"
+      },
+      "XLNX": {
+        "status": "NOT_TESTABLE",
+        "expected": "Xilinx bars, not AMD.",
+        "observed": "current XLNX assetid=NOT_FOUND; suffix XLNX-202202 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none"
+      },
+      "FRC": {
+        "status": "NOT_TESTABLE",
+        "expected": "First Republic own delisted series.",
+        "observed": "current FRC assetid=NOT_FOUND; suffix FRC-202305 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none"
+      },
+      "SIVB": {
+        "status": "NOT_TESTABLE",
+        "expected": "SVB Financial own delisted series.",
+        "observed": "current SIVB assetid=NOT_FOUND; suffix SIVB-202303 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none"
+      },
+      "TKO": {
+        "status": "LIVE_PARTIAL",
+        "expected": "TKO from 2023-09-12 as a new issuer; WWE predecessor bars must not be labeled TKO.",
+        "observed": "current TKO assetid=144819; identity=LIVE_PARTIAL coverage=NOT_TESTABLE source=current_ticker"
+      },
+      "XYZ": {
+        "status": "LIVE_PARTIAL",
+        "expected": "Same assetid across SQ\u2192XYZ (same Class A).",
+        "observed": "current SQ assetid=NOT_FOUND; suffix SQ-202501 assetid=NOT_FOUND; identity=NOT_TESTABLE coverage=NOT_TESTABLE source=none | current XYZ assetid=2104402; identity=LIVE_PARTIAL coverage=NOT_TESTABLE source=current_ticker; pair=NOT_TESTABLE"
+      },
+      "GME": {
+        "status": "LIVE_PARTIAL",
+        "expected": "One stable identity and ordinary daily history.",
+        "observed": "current GME assetid=124739; identity=LIVE_PARTIAL coverage=NOT_TESTABLE source=current_ticker"
+      }
+    },
+    "verdict": "INSUFFICIENT",
+    "note": "Windows Trial 2026-09-03. Not this Mac. Not Platinum depth."
+  },
+  "gates": {
+    "gate_a_market_data": {
+      "question": "Retrieve 2013-07-08 \u2192 2025-12-31 with required price roles?",
+      "result": "BLOCKED",
+      "reason": "Norgate Platinum not reachable; Sharadar SEP not credentialed. Yahoo listed depth is not the selected tape."
+    },
+    "gate_b_identity": {
+      "question": "Security Master map vendor records without ticker guessing?",
+      "result": "PARTIAL",
+      "reason": "Internal occupancy mapping is proven for seeded cases. Vendor record mapping (assetid/permaticker) is not live. ATVI unseeded. Catalog still exceptions-only."
+    },
+    "gate_c_pit": {
+      "question": "Historical membership joined to canonical security identity?",
+      "result": "PARTIAL",
+      "reason": "PIT membership can be reconstructed from unofficial fja05680. Join to canonical security_id works only for seeded catalog names. Join to vendor identifiers is not live-proven. Current S&P 500 list was not used."
+    },
+    "gate_d_corporate_actions": {
+      "question": "Represent split/reverse/dividend/merger/delisting without inventing economics?",
+      "result": "PARTIAL",
+      "reason": "Domain can leave mergers UNRESOLVED. Live factor/amount rows are not available. Merger terms remain UNRESOLVED. Delisting proceeds PARTIAL (last-close proxy)."
+    },
+    "gate_e_survivorship": {
+      "question": "Historical delisted/acquired securities remain in the research tape?",
+      "result": "PARTIAL",
+      "reason": "Catalog retains DELISTED names. Yahoo cannot supply Spectra/ATVI/HAR Harman. Selected vendor delisted tape is not live."
+    },
+    "gate_f_access": {
+      "question": "Can this project obtain the required data under current constraints?",
+      "result": "FAIL",
+      "reason": "norgate_platinum_access=ACCESS_BLOCKED; sharadar_actions_access=NOT_AVAILABLE"
+    }
+  },
+  "coverage_matrix_status": {
+    "2013-07-08_depth": "BLOCKED",
+    "2025-12-31_depth": "BLOCKED",
+    "TOTALRETURN": "UNKNOWN",
+    "CAPITAL_Open": "UNKNOWN",
+    "CAPITAL_Close": "UNKNOWN",
+    "split_factor": "UNKNOWN",
+    "dividend_amount": "UNKNOWN",
+    "merger_terms": "UNRESOLVED",
+    "delisting_proceeds": "PARTIAL",
+    "security_identity": "PARTIAL",
+    "ticker_history": "PARTIAL",
+    "share_classes": "PARTIAL",
+    "pit_membership": "PARTIAL",
+    "delisted_coverage": "PARTIAL",
+    "survivorship_free": "PARTIAL"
+  },
+  "final_decision": "CONDITIONAL GO",
+  "decision_reason": "Option C hybrid remains the target architecture, but neither Norgate Platinum nor Sharadar ACTIONS is operationally available in this environment. Mandatory price-role and CA-factor capabilities are documented, not live-proven."
+}

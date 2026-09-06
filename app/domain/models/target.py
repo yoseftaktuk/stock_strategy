@@ -2,20 +2,23 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from app.domain.exceptions import DomainValidationError
+from app.domain.models.identity import IdentityCarrier, IdentityRef, require_matching_ticker
 
 _WEIGHT_TOLERANCE = Decimal("0.0000001")
 
 
 @dataclass(frozen=True)
-class TargetPosition:
+class TargetPosition(IdentityCarrier):
     symbol: str
     target_weight: Decimal
+    identity: IdentityRef | None = None
 
     def __post_init__(self) -> None:
         if not self.symbol.strip():
             raise DomainValidationError("symbol must not be empty")
         if self.target_weight < 0:
             raise DomainValidationError("target_weight must be non-negative")
+        require_matching_ticker(self.symbol, self.identity)
 
 
 @dataclass(frozen=True)
@@ -36,6 +39,11 @@ class TargetPortfolio:
             )
 
     def weight_for(self, symbol: str) -> Decimal:
+        """Return target weight for an execution ticker.
+
+        Listing/display lookup only. Not a position identity key. Recycled
+        tickers would collide here; OrderService nets by ``position_key``.
+        """
         for item in self.positions:
             if item.symbol == symbol:
                 return item.target_weight

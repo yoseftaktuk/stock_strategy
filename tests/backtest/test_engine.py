@@ -281,24 +281,23 @@ def test_last_session_rebalance_warns_and_does_not_fill_after_end() -> None:
 
 
 @pytest.mark.backtest
-def test_extreme_first_close_marks_series_unusable_without_dropping_membership() -> None:
+def test_high_priced_name_can_fill_without_dropping_membership() -> None:
     market_data = _market_data()
-    market_data["RICH"] = make_series(
-        "RICH",
+    adjusted = [Decimal("3000") + Decimal("2") * Decimal(index) for index in range(80)]
+    market_data["AZO"] = make_series(
+        "AZO",
         80,
         start=START,
-        close=Decimal("5000"),
+        close=Decimal("3200"),
+        adjusted_closes=adjusted,
         volume=2_000_000,
     )
     engine, _ = _engine(_config())
     result = engine.run(START, END, market_data=market_data)
-    extreme = [warning for warning in result.warnings if "Unusable price series" in warning]
-    assert extreme
-    assert "RICH" in extreme[0]
-    assert "PIT membership was not dropped" in extreme[0]
-    assert all(fill.symbol != "RICH" for fill in result.fills)
-    assert "RICH" in result.unusable_symbols
-    assert "RICH" in result.priced_symbols
+    assert "AZO" not in result.unusable_symbols
+    assert any(fill.symbol == "AZO" for fill in result.fills)
+    assert not any("Unusable price series" in warning for warning in result.warnings)
+    assert "AZO" in result.priced_symbols
 
 
 @pytest.mark.backtest

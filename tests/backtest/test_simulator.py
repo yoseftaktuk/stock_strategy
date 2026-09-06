@@ -125,7 +125,27 @@ def test_successful_order_records_one_fill_with_market_price() -> None:
 
 
 @pytest.mark.backtest
-def test_mark_to_market_unvalued_excludes_position_from_equity() -> None:
+def test_liquidate_at_sells_full_position_without_slippage() -> None:
+    broker = _broker()
+    broker.submit_order(_order(OrderSide.BUY, Decimal("10")))
+    cash_after_buy = broker.get_account().cash
+    filled = broker.liquidate_at(
+        "AAPL",
+        Decimal("110"),
+        SESSION,
+        client_order_id="2024-02-02-TERM-AAPL",
+    )
+    assert filled is not None
+    assert filled.status == OrderStatus.FILLED
+    assert filled.quantity == Decimal("10")
+    trade_value = Decimal("10") * Decimal("110")
+    commission = commission_on(trade_value, Decimal("0.0005"))
+    assert broker.get_account().cash == cash_after_buy + trade_value - commission
+    assert broker.get_positions() == []
+    fill = broker.get_fills()[-1]
+    assert fill.price == Decimal("110")
+    assert fill.slippage == Decimal("0")
+    assert fill.order_id == "2024-02-02-TERM-AAPL"
     broker = _broker()
     broker.submit_order(_order(OrderSide.BUY, Decimal("10")))
     broker.mark_to_market({"AAPL": Decimal("110")})

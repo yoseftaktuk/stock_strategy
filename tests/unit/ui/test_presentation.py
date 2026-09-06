@@ -93,6 +93,15 @@ def test_summary_table_formats_metrics() -> None:
     assert values["Commission"] == "$10.25"
     assert values["Slippage"] == "$5.00"
     assert values["SPY Buy & Hold"] == "8.00%"
+    assert "Signal start" not in values
+
+
+@pytest.mark.unit
+def test_summary_table_includes_signal_start_when_set() -> None:
+    table = summary_table(replace(_result(), signal_start=date(2024, 1, 3)))
+    values = dict(zip(table["Metric"], table["Value"], strict=True))
+    assert values["Period"] == "2024-01-02 → 2024-01-05"
+    assert values["Signal start"] == "2024-01-03"
 
 
 @pytest.mark.unit
@@ -240,6 +249,9 @@ def test_fills_table_rows() -> None:
         "Commission",
         "Slippage",
         "Order ID",
+        "Security ID",
+        "Listing ID",
+        "Position Key",
     ]
     assert table.iloc[0]["Symbol"] == "AAPL"
     assert table.iloc[0]["Side"] == "BUY"

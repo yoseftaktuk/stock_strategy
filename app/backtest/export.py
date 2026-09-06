@@ -35,6 +35,9 @@ FILLS_FIELDS = (
     "portfolio_value",
     "cash",
     "position_quantity",
+    "security_id",
+    "listing_id",
+    "position_key",
 )
 ORDERS_FIELDS = (
     "client_order_id",
@@ -44,6 +47,9 @@ ORDERS_FIELDS = (
     "order_type",
     "status",
     "limit_price",
+    "security_id",
+    "listing_id",
+    "position_key",
 )
 EQUITY_FIELDS = (
     "date",
@@ -76,6 +82,9 @@ def fill_row(fill: Fill, order: Order | None) -> dict[str, str]:
         "portfolio_value": _optional_decimal(fill.portfolio_value),
         "cash": _optional_decimal(fill.cash),
         "position_quantity": _optional_decimal(fill.position_quantity),
+        "security_id": fill.security_id or "",
+        "listing_id": fill.listing_id or "",
+        "position_key": fill.position_key or "",
     }
 
 
@@ -89,6 +98,9 @@ def orders_rows(result: BacktestResult) -> list[dict[str, str]]:
             "order_type": order.order_type.value,
             "status": order.status.value,
             "limit_price": _decimal(order.limit_price) if order.limit_price is not None else "",
+            "security_id": order.security_id or "",
+            "listing_id": order.listing_id or "",
+            "position_key": order.position_key or "",
         }
         for order in result.orders
     ]

@@ -3,12 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.data.price_quality import (
-    DEFAULT_EXTREME_FIRST_CLOSE,
-    REASON_EXTREME_FIRST_CLOSE,
-    assess_price_series,
-    unusable_symbols,
-)
+from app.data.price_quality import assess_price_series, unusable_symbols
 from tests.fixtures.momentum import make_series
 
 
@@ -22,30 +17,21 @@ def test_normal_series_is_usable() -> None:
 
 
 @pytest.mark.unit
-def test_extreme_first_close_is_unusable() -> None:
-    bars = make_series("RICH", 10, start=date(2024, 1, 2), close=Decimal("5000"))
+def test_azo_class_high_first_close_is_usable() -> None:
+    bars = make_series("AZO", 10, start=date(2024, 1, 2), close=Decimal("3200"))
     assessment = assess_price_series(bars)
-    assert assessment.usable is False
-    assert assessment.reason == REASON_EXTREME_FIRST_CLOSE
-    assert "RICH" in unusable_symbols({"RICH": bars})
+    assert assessment.usable is True
+    assert assessment.reason is None
+    assert unusable_symbols({"AZO": bars}) == {}
 
 
 @pytest.mark.unit
-def test_threshold_boundary_is_unusable() -> None:
-    bars = make_series(
-        "EDGE",
-        5,
-        start=date(2024, 1, 2),
-        close=DEFAULT_EXTREME_FIRST_CLOSE,
-    )
-    assert assess_price_series(bars).usable is False
-
-
-@pytest.mark.unit
-def test_high_but_valid_first_close_is_usable() -> None:
-    bars = make_series("NVRX", 5, start=date(2024, 1, 2), close=Decimal("917"))
-    assert assess_price_series(bars).usable is True
-    assert unusable_symbols({"NVRX": bars}) == {}
+def test_mtd_nvr_class_high_first_close_is_usable() -> None:
+    mtd = make_series("MTD", 5, start=date(2024, 1, 2), close=Decimal("1400"))
+    nvr = make_series("NVR", 5, start=date(2024, 1, 2), close=Decimal("7500"))
+    assert assess_price_series(mtd).usable is True
+    assert assess_price_series(nvr).usable is True
+    assert unusable_symbols({"MTD": mtd, "NVR": nvr}) == {}
 
 
 @pytest.mark.unit

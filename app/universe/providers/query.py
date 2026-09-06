@@ -1,9 +1,11 @@
 """PostgreSQL-backed universe providers. No network access."""
 
+from collections.abc import Sequence
 from datetime import date
 
 from app.database.repositories.interfaces import SP500ConstituentRepository
 from app.universe.interface import UniverseProvider
+from app.universe.models import ConstituentMembership
 
 
 class HistoricalSP500UniverseProvider(UniverseProvider):
@@ -13,8 +15,10 @@ class HistoricalSP500UniverseProvider(UniverseProvider):
         self._repository = repository
 
     def get_symbols(self, as_of: date) -> list[str]:
-        memberships = self._repository.get_memberships_as_of(as_of)
-        return sorted({item.symbol for item in memberships})
+        return sorted({item.symbol for item in self.get_memberships(as_of)})
+
+    def get_memberships(self, as_of: date) -> Sequence[ConstituentMembership]:
+        return self._repository.get_memberships_as_of(as_of)
 
 
 class CurrentSP500UniverseProvider(UniverseProvider):
@@ -29,6 +33,10 @@ class CurrentSP500UniverseProvider(UniverseProvider):
         self._repository = repository
 
     def get_symbols(self, as_of: date) -> list[str]:
+        return sorted({item.symbol for item in self.get_memberships(as_of)})
+
+    def get_memberships(self, as_of: date) -> Sequence[ConstituentMembership]:
         del as_of
-        memberships = self._repository.get_all_memberships()
-        return sorted({item.symbol for item in memberships if item.end_date is None})
+        return tuple(
+            item for item in self._repository.get_all_memberships() if item.end_date is None
+        )

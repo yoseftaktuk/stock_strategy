@@ -1,0 +1,244 @@
+{
+  "assessment_date": "2026-09-06",
+  "round": 11,
+  "research_ready": false,
+  "production_modified": false,
+  "alternative_column": "Sharadar SEP documented public pages; not live-queried",
+  "cell_values": ["SUPPORTED", "PARTIAL", "UNSUPPORTED", "UNKNOWN"],
+  "capabilities": {
+    "historical_ohlc": {
+      "yahoo_current": {
+        "status": "SUPPORTED",
+        "reason": "Daily OHLC present for listed local CSVs; semantics are split-adjusted, not raw."
+      },
+      "norgate_trial": {
+        "status": "PARTIAL",
+        "reason": "Live listed names from 2024-09-03 only; pre-window history absent."
+      },
+      "norgate_full": {
+        "status": "SUPPORTED",
+        "reason": "Documented Platinum daily OHLC to 1990. Not live-proven on this Mac."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "Sharadar SEP documents OHLCV from 1998 for active and delisted US names."
+      }
+    },
+    "raw_ohlc": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "Round 10 AAPL 4-for-1: Close stays ~$125 across split; not raw unadjusted."
+      },
+      "norgate_trial": {
+        "status": "PARTIAL",
+        "reason": "NONE adjustment and Unadjusted Close documented; Trial probe used a 3-bar limit, not a full unadjusted tape proof."
+      },
+      "norgate_full": {
+        "status": "SUPPORTED",
+        "reason": "Documented StockPriceAdjustmentType.NONE, Unadjusted Close column, unadjusted_close_timeseries."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "Sharadar documents closeunadj / unadjusted prices."
+      }
+    },
+    "adjusted_ohlc": {
+      "yahoo_current": {
+        "status": "PARTIAL",
+        "reason": "adjusted_close is split+dividend; OHLC is not dividend-adjusted."
+      },
+      "norgate_trial": {
+        "status": "PARTIAL",
+        "reason": "TOTALRETURN documented; 2-year depth only."
+      },
+      "norgate_full": {
+        "status": "SUPPORTED",
+        "reason": "Documented TOTALRETURN (default), CAPITAL, CAPITALSPECIAL."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "Sharadar documents split-adjusted OHLC and closeadj total-return close."
+      }
+    },
+    "split_events": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "No event table on stored tape. Events must not be inferred from prices."
+      },
+      "norgate_trial": {
+        "status": "UNKNOWN",
+        "reason": "Split event API not live-probed on Trial artifacts."
+      },
+      "norgate_full": {
+        "status": "PARTIAL",
+        "reason": "capital_event_timeseries is boolean only. FAQ: no direct split/dividend event details. No factor field in Python API."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "SHARADAR/ACTIONS documents action=split. Factor completeness not live-verified."
+      }
+    },
+    "dividend_events": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "Dividends embedded in Adj Close only; EmptyCorporateActionProvider."
+      },
+      "norgate_trial": {
+        "status": "PARTIAL",
+        "reason": "Dividend column documented when adjustment is not TOTALRETURN; not live-proven on Trial."
+      },
+      "norgate_full": {
+        "status": "PARTIAL",
+        "reason": "Amount on price_timeseries if CAPITAL/CAPITALSPECIAL; hidden under TOTALRETURN; no standalone event table with pay vs ex-date."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "SHARADAR/ACTIONS documents cash and stock dividends."
+      }
+    },
+    "merger_terms": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "No cash/share conversion terms."
+      },
+      "norgate_trial": {
+        "status": "UNSUPPORTED",
+        "reason": "FAQ identity rules only; no terms. Trial did not observe merger terms."
+      },
+      "norgate_full": {
+        "status": "UNSUPPORTED",
+        "reason": "FAQ: surviving-entity assetid rules; explicitly no consistent cash/share value for takeovers."
+      },
+      "alternative": {
+        "status": "PARTIAL",
+        "reason": "ACTIONS documents acquisitions; cash/share conversion fields not verified from public schema in this assessment."
+      }
+    },
+    "delisting_proceeds": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "known_delisting_last_close_proxy only; not proceeds."
+      },
+      "norgate_trial": {
+        "status": "PARTIAL",
+        "reason": "In-window last bar possible; pre-window delisted suffixes NOT_FOUND; FAQ no delisting return."
+      },
+      "norgate_full": {
+        "status": "PARTIAL",
+        "reason": "Last traded bar and last_quoted_date. FAQ: no delisting return or delist reason."
+      },
+      "alternative": {
+        "status": "PARTIAL",
+        "reason": "SEP documents delist reasons; proceeds/DLRET-class fields UNKNOWN."
+      }
+    },
+    "security_identity": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "Ticker-keyed; remaps and recycles."
+      },
+      "norgate_trial": {
+        "status": "PARTIAL",
+        "reason": "Live assetid for in-window listed (GME, XYZ, Sea, TKO, GEN, RVTY). Pre-window occupancies untestable."
+      },
+      "norgate_full": {
+        "status": "SUPPORTED",
+        "reason": "Documented integer assetid survives ticker change, exchange move, delisting. Vendor attribute only."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "Documented unchanging permaticker."
+      }
+    },
+    "ticker_history": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "History prepended/remapped onto current ticker; no occupancy API."
+      },
+      "norgate_trial": {
+        "status": "UNSUPPORTED",
+        "reason": "Official FAQ: prior symbols are not provided. SQ NOT_FOUND; series on XYZ."
+      },
+      "norgate_full": {
+        "status": "UNSUPPORTED",
+        "reason": "Same FAQ. Occupancy is current symbol or TICKER-YYYYMM plus Security Master."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "ACTIONS documents ticker changes. Not live-proven."
+      }
+    },
+    "historical_constituents": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "Not a constituent feed."
+      },
+      "norgate_trial": {
+        "status": "UNKNOWN",
+        "reason": "Trial SKU claims historical constituents; frozen probe did not persist a live $SPX membership dump."
+      },
+      "norgate_full": {
+        "status": "SUPPORTED",
+        "reason": "Documented $SPX constituents from Mar 1957 at Platinum/Diamond. Not official SPDJI."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "Sharadar documents S&P 500 additions/removals since 1957. Not official SPDJI."
+      }
+    },
+    "pit_membership": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "Cannot reconstruct as-of membership."
+      },
+      "norgate_trial": {
+        "status": "UNKNOWN",
+        "reason": "index_constituent_timeseries documented; not live-proven on Trial artifacts."
+      },
+      "norgate_full": {
+        "status": "SUPPORTED",
+        "reason": "Documented index_constituent_timeseries true/false as-of. Watchlists are not PIT."
+      },
+      "alternative": {
+        "status": "PARTIAL",
+        "reason": "Constituent history tables documented; as-of query semantics not live-proven here."
+      }
+    },
+    "survivorship_free": {
+      "yahoo_current": {
+        "status": "UNSUPPORTED",
+        "reason": "Delisted/recycle holes; live-ticker bias."
+      },
+      "norgate_trial": {
+        "status": "UNSUPPORTED",
+        "reason": "2-year listed-heavy tape; pre-window delists NOT_FOUND."
+      },
+      "norgate_full": {
+        "status": "PARTIAL",
+        "reason": "Designed survivorship-aware at Platinum; completeness of the 113 UNKNOWN; membership not official SPDJI."
+      },
+      "alternative": {
+        "status": "PARTIAL",
+        "reason": "Delisted prices plus constituent history documented; completeness UNKNOWN."
+      }
+    },
+    "historical_depth": {
+      "yahoo_current": {
+        "status": "PARTIAL",
+        "reason": "Local listed files cover 2013-07-08 to 2025-12-31; 150 PIT names missing."
+      },
+      "norgate_trial": {
+        "status": "UNSUPPORTED",
+        "reason": "Observed first_quoted 2024-09-03; cannot cover 2013-07-08 warmup or 2015 start."
+      },
+      "norgate_full": {
+        "status": "SUPPORTED",
+        "reason": "Platinum history to 1990 covers the configured 2013-07-08 to 2025-12-31 window."
+      },
+      "alternative": {
+        "status": "SUPPORTED",
+        "reason": "SEP prices documented from 1998, covering 2013-2025."
+      }
+    }
+  }
+}

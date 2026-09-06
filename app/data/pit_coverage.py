@@ -13,12 +13,14 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, timedelta
-from decimal import Decimal
 from pathlib import Path
 
-from app.data.price_quality import DEFAULT_EXTREME_FIRST_CLOSE
 from app.data.validation import normalize_symbol
 from app.domain.models.security import RESOLUTION_RESOLVED, RESOLUTION_UNRESOLVED, STATUS_DELISTED
+from app.security_master.interface import SecurityMaster
+from app.security_master.vendor import preferred_vendor_symbol, vendor_fetch_symbols
+from app.universe.audit import PriceWindow, month_starts
+from app.universe.models import ConstituentMembership
 from app.security_master.interface import SecurityMaster
 from app.security_master.vendor import preferred_vendor_symbol, vendor_fetch_symbols
 from app.universe.audit import PriceWindow, month_starts
@@ -170,7 +172,6 @@ def build_pit_coverage(
     start: date = DEFAULT_WINDOW_START,
     end: date = DEFAULT_WINDOW_END,
     universe_source: str = "",
-    extreme_first_close: Decimal = DEFAULT_EXTREME_FIRST_CLOSE,
 ) -> PitCoverageReport:
     """Join PIT membership, Security Master, and local price windows."""
     by_symbol: dict[str, list[ConstituentMembership]] = defaultdict(list)
@@ -191,7 +192,6 @@ def build_pit_coverage(
                 start=start,
                 end=end,
                 rebalance_encountered=symbol in rebalance_symbols,
-                extreme_first_close=extreme_first_close,
             )
         )
 
@@ -272,7 +272,6 @@ def _row_for_symbol(
     start: date,
     end: date,
     rebalance_encountered: bool,
-    extreme_first_close: Decimal,
 ) -> PitCoverageRow:
     ordered = tuple(sorted(intervals, key=lambda item: item.start_date))
     pit_start = min(item.start_date for item in ordered)
@@ -297,10 +296,6 @@ def _row_for_symbol(
 
     price_usable = True
     quality_reason = ""
-    if vendor_window is not None and vendor_window.first_close is not None:
-        if vendor_window.first_close >= extreme_first_close:
-            price_usable = False
-            quality_reason = "extreme_first_close"
 
     identity_failed = False
     if identity_status == RESOLUTION_RESOLVED and master is not None:

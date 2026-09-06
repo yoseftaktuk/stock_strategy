@@ -1,12 +1,23 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_DOWN, Decimal
 
 from app.domain.enums import OrderSide, OrderType
 from app.domain.execution import apply_slippage, commission_on
+from app.domain.models.identity import IdentityRef, position_key_for
 from app.domain.models.order import Order
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.target import TargetPortfolio
+
+
+@dataclass
+class _Booked:
+    execution_symbol: str
+    quantity: Decimal
+    market_value: Decimal
+    identity: IdentityRef | None
+    target_weight: Decimal
 
 
 class OrderService:
@@ -29,21 +40,20 @@ class OrderService:
         as_of: date,
     ) -> list[Order]:
         equity = current.equity
-        current_qty = {position.symbol: position.quantity for position in current.positions}
-        current_value = {position.symbol: position.market_value for position in current.positions}
-        target_weights = {item.symbol: item.target_weight for item in target.positions}
-        symbols = sorted(set(current_qty) | set(target_weights))
+        booked = _booked_by_position_key(current, target)
+        keys = sorted(booked)
 
         sell_intents: list[tuple[str, Decimal]] = []
         buy_intents: list[tuple[str, Decimal]] = []
 
-        for symbol in symbols:
+        for key in keys:
+            slot = booked[key]
+            symbol = slot.execution_symbol
             market_price = prices.get(symbol)
             if market_price is None or market_price <= 0:
                 continue
-            weight = target_weights.get(symbol, Decimal("0"))
-            target_value = equity * weight
-            held_value = current_value.get(symbol, Decimal("0"))
+            target_value = equity * slot.target_weight
+            held_value = slot.market_value
             if abs(target_value - held_value) < min_trade_value:
                 continue
 
@@ -52,23 +62,25 @@ class OrderService:
             if execution_price <= 0:
                 continue
             target_shares = (target_value / execution_price).to_integral_value(rounding=ROUND_DOWN)
-            held_shares = current_qty.get(symbol, Decimal("0"))
+            held_shares = slot.quantity
             delta = target_shares - held_shares
             if delta < 0:
                 sell_qty = min(-delta, held_shares)
                 if sell_qty > 0:
-                    sell_intents.append((symbol, sell_qty))
+                    sell_intents.append((key, sell_qty))
             elif delta > 0:
-                buy_intents.append((symbol, delta))
+                buy_intents.append((key, delta))
 
         projected_cash = current.cash
-        for symbol, quantity in sell_intents:
+        for key, quantity in sell_intents:
+            symbol = booked[key].execution_symbol
             fill_price = apply_slippage(OrderSide.SELL, prices[symbol], self._slippage_bps)
             trade_value = quantity * fill_price
             projected_cash += trade_value - commission_on(trade_value, self._commission_rate)
 
         affordable_buys: list[tuple[str, Decimal]] = []
-        for symbol, quantity in buy_intents:
+        for key, quantity in buy_intents:
+            symbol = booked[key].execution_symbol
             fill_price = apply_slippage(OrderSide.BUY, prices[symbol], self._slippage_bps)
             affordable = _max_shares_for_cash(projected_cash, fill_price, self._commission_rate)
             quantity = min(quantity, affordable)
@@ -78,17 +90,73 @@ class OrderService:
             if trade_value < min_trade_value:
                 continue
             projected_cash -= trade_value + commission_on(trade_value, self._commission_rate)
-            affordable_buys.append((symbol, quantity))
+            affordable_buys.append((key, quantity))
 
         orders: list[Order] = []
         sequence = 1
-        for symbol, quantity in sell_intents:
-            orders.append(_market_order(symbol, OrderSide.SELL, quantity, as_of, sequence))
+        for key, quantity in sell_intents:
+            slot = booked[key]
+            orders.append(
+                _market_order(
+                    slot.execution_symbol,
+                    OrderSide.SELL,
+                    quantity,
+                    as_of,
+                    sequence,
+                    identity=slot.identity,
+                )
+            )
             sequence += 1
-        for symbol, quantity in affordable_buys:
-            orders.append(_market_order(symbol, OrderSide.BUY, quantity, as_of, sequence))
+        for key, quantity in affordable_buys:
+            slot = booked[key]
+            orders.append(
+                _market_order(
+                    slot.execution_symbol,
+                    OrderSide.BUY,
+                    quantity,
+                    as_of,
+                    sequence,
+                    identity=slot.identity,
+                )
+            )
             sequence += 1
         return orders
+
+
+def _booked_by_position_key(
+    current: Portfolio,
+    target: TargetPortfolio,
+) -> dict[str, _Booked]:
+    booked: dict[str, _Booked] = {}
+    for position in current.positions:
+        key = position_key_for(position)
+        booked[key] = _Booked(
+            execution_symbol=position.symbol,
+            quantity=position.quantity,
+            market_value=position.market_value,
+            identity=position.identity,
+            target_weight=Decimal("0"),
+        )
+    for item in target.positions:
+        key = position_key_for(item)
+        existing = booked.get(key)
+        if existing is None:
+            booked[key] = _Booked(
+                execution_symbol=item.symbol,
+                quantity=Decimal("0"),
+                market_value=Decimal("0"),
+                identity=item.identity,
+                target_weight=item.target_weight,
+            )
+            continue
+        booked[key] = _Booked(
+            execution_symbol=item.symbol,
+            quantity=existing.quantity,
+            market_value=existing.market_value,
+            identity=item.identity if item.identity is not None else existing.identity,
+            target_weight=item.target_weight,
+        )
+    return booked
 
 
 def _max_shares_for_cash(cash: Decimal, fill_price: Decimal, commission_rate: Decimal) -> Decimal:
@@ -106,6 +174,8 @@ def _market_order(
     quantity: Decimal,
     as_of: date,
     sequence: int,
+    *,
+    identity: IdentityRef | None,
 ) -> Order:
     return Order(
         symbol=symbol,
@@ -114,4 +184,5 @@ def _market_order(
         order_type=OrderType.MARKET,
         limit_price=None,
         client_order_id=f"{as_of.isoformat()}-{sequence:04d}",
+        identity=identity,
     )

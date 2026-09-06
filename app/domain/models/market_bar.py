@@ -7,6 +7,19 @@ from app.domain.exceptions import DomainValidationError
 
 @dataclass(frozen=True)
 class MarketBar:
+    """One daily bar. Field names are vendor columns, not accounting roles.
+
+    On the current Yahoo path (``auto_adjust=False``):
+
+    * ``open`` / ``high`` / ``low`` / ``close`` are Yahoo OHLC. Empirically
+      these are **split-adjusted**, not raw unadjusted prints. They are not
+      dividend-adjusted. Do not treat ``close`` as economic unadjusted close.
+    * ``adjusted_close`` is Yahoo Adj Close (split **and** dividend adjusted).
+      Momentum/signal only. Never execution, mark-to-market, or termination.
+
+    There is no dividend, split, or merger field on this type.
+    """
+
     symbol: str
     timestamp: datetime
     open: Decimal

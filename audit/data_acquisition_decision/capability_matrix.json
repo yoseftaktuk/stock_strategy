@@ -1,0 +1,204 @@
+{
+  "assessment_date": "2026-09-06",
+  "round": 12,
+  "research_ready": false,
+  "production_modified": false,
+  "cell_values": ["SUPPORTED", "PARTIAL", "UNSUPPORTED", "UNKNOWN"],
+  "evidence_classes": ["A_contractual", "B_vendor_documented", "C_live_proven", "D_project_operational"],
+  "columns": {
+    "yahoo_current": {
+      "label": "Yahoo current tape",
+      "access": "SUPPORTED",
+      "live_proven": true,
+      "documented": true
+    },
+    "norgate_trial": {
+      "label": "Norgate Trial 2024-09-03 to 2025-12-31",
+      "access": "UNSUPPORTED",
+      "live_proven": "windows_2026-09-03_only",
+      "documented": true
+    },
+    "norgate_platinum": {
+      "label": "Norgate US Stocks Platinum",
+      "access": "UNSUPPORTED",
+      "live_proven": false,
+      "documented": true
+    },
+    "sharadar": {
+      "label": "Sharadar SEP/ACTIONS/TICKERS/SP500",
+      "access": "UNSUPPORTED",
+      "live_proven": false,
+      "documented": true
+    },
+    "crsp": {
+      "label": "CRSP US Stock",
+      "access": "UNSUPPORTED",
+      "live_proven": false,
+      "documented": true
+    }
+  },
+  "capabilities": {
+    "historical_ohlc": {
+      "yahoo_current": {"status": "SUPPORTED", "evidence": "C+D Local listed daily OHLC; split-adjusted semantics."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "C Windows listed names from 2024-09-03 only."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED daily OHLC to 1990. Not live-proven."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED SEP OHLCV from 1998 active+delisted. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED daily US stock OHLC. Not licensed."}
+    },
+    "raw_ohlc": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "C Round 10 AAPL 4-for-1 Close stays split-adjusted."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "B NONE/Unadjusted Close documented; Trial 3-bar limit not full proof."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED NONE / Unadjusted Close. Not live-proven."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED closeunadj; OHL imputed. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED unadjusted prices. Not licensed."}
+    },
+    "split_adjusted_ohlc": {
+      "yahoo_current": {"status": "SUPPORTED", "evidence": "C Close is split-adjusted, not dividend-adjusted."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "B CAPITAL documented; 2-year depth."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED CAPITAL / CAPITALSPECIAL."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED SEP OHLC split-adjusted, not cash-div/spinoff."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED distribution adjustment factors."}
+    },
+    "total_return_series": {
+      "yahoo_current": {"status": "PARTIAL", "evidence": "C adjusted_close is split+dividend; no named TR series."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "B TOTALRETURN documented; 2-year only."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED TOTALRETURN default."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED closeadj (splits+cash div+spinoffs)."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED RET including dividends."}
+    },
+    "split_event_factor": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "C No event table. Must not infer from prices."},
+      "norgate_trial": {"status": "UNKNOWN", "evidence": "Split event API not live-probed on Trial artifacts."},
+      "norgate_platinum": {"status": "UNSUPPORTED", "evidence": "B FAQ no direct CA details. capital_event_timeseries is boolean only. No factor. Round 12 tightens Round 11 PARTIAL to UNSUPPORTED for factor."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED ACTIONS action=split plus numeric value. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED FACSHR. Not licensed."}
+    },
+    "dividend_amount": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "C Embedded in Adj Close only."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "B Dividend column when not TOTALRETURN; entitlement = day before ex-date. Not live-proven."},
+      "norgate_platinum": {"status": "PARTIAL", "evidence": "B Same column rules. Hidden under TOTALRETURN. Not a full event table."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED ACTIONS dividends; value as amount. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED DIVAMT. Not licensed."}
+    },
+    "merger_cash_terms": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "No cash-per-share terms."},
+      "norgate_trial": {"status": "UNSUPPORTED", "evidence": "FAQ identity rules only."},
+      "norgate_platinum": {"status": "UNSUPPORTED", "evidence": "B FAQ: no consistent cash value for takeovers."},
+      "sharadar": {"status": "UNKNOWN", "evidence": "B Acquisition events marketed. Public columns do not document that value is cash-per-share. Not live-proven."},
+      "crsp": {"status": "PARTIAL", "evidence": "B Distributions/delists document cash amounts. Completeness of project cases not proven. Not licensed."}
+    },
+    "merger_share_terms": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "No conversion ratio."},
+      "norgate_trial": {"status": "UNSUPPORTED", "evidence": "FAQ identity rules only."},
+      "norgate_platinum": {"status": "UNSUPPORTED", "evidence": "B Surviving-entity assetid rules; no share-conversion ratio."},
+      "sharadar": {"status": "UNKNOWN", "evidence": "B contraticker identifies counterparty. Conversion ratio not documented. Not live-proven."},
+      "crsp": {"status": "PARTIAL", "evidence": "B NWPERM / conversion-class distributions documented. Not live-proven. Not licensed."}
+    },
+    "delisting_proceeds": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "known_delisting_last_close_proxy only."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "In-window last bar; pre-window NOT_FOUND; FAQ no delisting return."},
+      "norgate_platinum": {"status": "PARTIAL", "evidence": "B Last bar; explicitly no delisting return."},
+      "sharadar": {"status": "UNKNOWN", "evidence": "B Delist reasons marketed; proceeds/DLRET not in public ACTIONS columns. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED DLRET/DLAMT/DLPRC. Not licensed."}
+    },
+    "security_identity": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "Ticker-keyed; remaps and recycles."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "C Live assetid for in-window listed. Pre-window untestable."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED assetid. Vendor attribute only."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED permaticker. Issuer vs issue wording residual. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED PERMNO/PERMCO. Not licensed."}
+    },
+    "stable_vendor_id": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "No stable ID."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "C Live assetid for in-window listed names."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED integer assetid."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED unchanging permaticker."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED PERMNO."}
+    },
+    "ticker_history": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "History remapped onto current ticker."},
+      "norgate_trial": {"status": "UNSUPPORTED", "evidence": "B+C FAQ no prior symbols. SQ NOT_FOUND; series on XYZ."},
+      "norgate_platinum": {"status": "UNSUPPORTED", "evidence": "B FAQ: only the current symbol is provided."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED ACTIONS ticker changes + relatedtickers. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED name history. Not licensed."}
+    },
+    "share_classes": {
+      "yahoo_current": {"status": "PARTIAL", "evidence": "Vendor symbols BRK-B / BF-B exist; not a share-class master."},
+      "norgate_trial": {"status": "UNKNOWN", "evidence": "Sea Class A ADR observed in name; BRK.B vs BRK.A not live-tested."},
+      "norgate_platinum": {"status": "UNKNOWN", "evidence": "Distinct assetids expected; not live-proven."},
+      "sharadar": {"status": "PARTIAL", "evidence": "B Community TICKERS Primary/Secondary Class + relatedtickers. BRK.B vs BF.B not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B Distinct PERMNOs per share class. Not licensed."}
+    },
+    "historical_constituents": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "Not a constituent feed."},
+      "norgate_trial": {"status": "UNKNOWN", "evidence": "SKU claims it; frozen probe did not dump $SPX membership."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED $SPX from 1957. Not official SPDJI. Not live-proven."},
+      "sharadar": {"status": "PARTIAL", "evidence": "B SP500 from 1957 documented in fundamentals/bundle SKU; not listed in SEP-only tables. Not official SPDJI. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED dsp500list. Not licensed."}
+    },
+    "pit_membership": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "Cannot reconstruct as-of membership."},
+      "norgate_trial": {"status": "UNKNOWN", "evidence": "index_constituent_timeseries documented; not live-proven on Trial artifacts."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED index_constituent_timeseries true/false as-of. Watchlists are not PIT."},
+      "sharadar": {"status": "PARTIAL", "evidence": "B QuantRocket as-of helper documented; SKU caveat. Not live-proven."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED membership intervals. Not licensed."}
+    },
+    "delisted_securities": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "68 acquired/delisted of the 113 have no safe Yahoo series."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "C Delisted DB present; pre-window suffixes NOT_FOUND."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B DOCUMENTED delisted class to 1990. Completeness of the 113 UNKNOWN."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B DOCUMENTED 20k+ active+delisted from 1998. Completeness UNKNOWN."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED inactive securities. Not licensed."}
+    },
+    "survivorship_free": {
+      "yahoo_current": {"status": "UNSUPPORTED", "evidence": "Delisted/recycle holes; live-ticker bias."},
+      "norgate_trial": {"status": "UNSUPPORTED", "evidence": "2-year listed-heavy tape; pre-window delists NOT_FOUND."},
+      "norgate_platinum": {"status": "PARTIAL", "evidence": "Designed survivorship-aware; completeness of the 113 UNKNOWN; membership not official SPDJI."},
+      "sharadar": {"status": "PARTIAL", "evidence": "Delisted+constituents documented; completeness UNKNOWN; SP500 SKU caveat."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B DOCUMENTED survivor-bias-free design. Not licensed."}
+    },
+    "historical_depth": {
+      "yahoo_current": {"status": "PARTIAL", "evidence": "Local listed files cover 2013-07-08 to 2025-12-31; 150 PIT names missing."},
+      "norgate_trial": {"status": "UNSUPPORTED", "evidence": "Observed first_quoted 2024-09-03; cannot cover required window."},
+      "norgate_platinum": {"status": "SUPPORTED", "evidence": "B Platinum to 1990 covers 2013-07-08 to 2025-12-31."},
+      "sharadar": {"status": "SUPPORTED", "evidence": "B SEP from 1998 covers 2013-2025."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B Depth exceeds required window. Not licensed."}
+    },
+    "corrections_revisions": {
+      "yahoo_current": {"status": "PARTIAL", "evidence": "History restated; no revision log on stored CSV."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "B Continuous corrections without notification."},
+      "norgate_platinum": {"status": "PARTIAL", "evidence": "B Same FAQ; no revision table."},
+      "sharadar": {"status": "PARTIAL", "evidence": "B lastupdated documented. No public revision-history API inspected."},
+      "crsp": {"status": "SUPPORTED", "evidence": "B Documented research-grade file versions. Not licensed."}
+    },
+    "access_available_to_this_project": {
+      "yahoo_current": {"status": "SUPPORTED", "evidence": "D Production yfinance/CSV/market_bars path."},
+      "norgate_trial": {"status": "UNSUPPORTED", "evidence": "D This Mac: norgatedata missing; NDU not present. Prior Windows evidence preserved."},
+      "norgate_platinum": {"status": "UNSUPPORTED", "evidence": "D No Platinum subscription; NDU Windows-only."},
+      "sharadar": {"status": "UNSUPPORTED", "evidence": "D No SHARADAR / Nasdaq Data Link / Quandl credentials."},
+      "crsp": {"status": "UNSUPPORTED", "evidence": "D No WRDS/CRSP license. Availability unknown."}
+    },
+    "licensing_suitability": {
+      "yahoo_current": {"status": "PARTIAL", "evidence": "Informal yfinance research use. Not a licensed research tape."},
+      "norgate_trial": {"status": "PARTIAL", "evidence": "Personal use; delete content when trial ends; Derived Data may be retained."},
+      "norgate_platinum": {"status": "PARTIAL", "evidence": "Personal use only. No commercial license. USD 630/12 months public. Two machines."},
+      "sharadar": {"status": "UNKNOWN", "evidence": "Login-gated pricing. Professional vs non-professional. SKU (SEP-only vs bundle) unknown until quote."},
+      "crsp": {"status": "UNKNOWN", "evidence": "Institutional/WRDS-class. Cost unknown. Not licensed."}
+    }
+  },
+  "verdicts": {
+    "yahoo_research_primary": "NO-GO",
+    "yahoo_secondary_checksum": "GO",
+    "norgate_trial_research_tape": "NO-GO",
+    "norgate_platinum_complete_dataset": "NO-GO",
+    "norgate_platinum_prices_pit_assetid": "CONDITIONAL GO",
+    "sharadar_complete_dataset": "CONDITIONAL GO",
+    "sharadar_operational": "NO-GO until credentials",
+    "crsp_operational": "NO-GO",
+    "crsp_research_grade_upgrade": "CONDITIONAL GO",
+    "option_a": "CONDITIONAL GO blocked today",
+    "option_b": "CONDITIONAL GO with do-not-reapply-splits",
+    "option_c_hybrid": "CONDITIONAL GO recommended",
+    "option_d": "NO-GO"
+  }
+}

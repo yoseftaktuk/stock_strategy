@@ -3,10 +3,11 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.domain.exceptions import DomainValidationError
+from app.domain.models.identity import IdentityCarrier, IdentityRef, require_matching_ticker
 
 
 @dataclass(frozen=True)
-class Fill:
+class Fill(IdentityCarrier):
     order_id: str
     symbol: str
     quantity: Decimal
@@ -18,6 +19,7 @@ class Fill:
     position_quantity: Decimal | None = None
     market_price: Decimal | None = None
     portfolio_value: Decimal | None = None
+    identity: IdentityRef | None = None
 
     def __post_init__(self) -> None:
         if not self.order_id.strip():
@@ -42,3 +44,4 @@ class Fill:
             raise DomainValidationError("portfolio_value must be non-negative")
         if self.timestamp.tzinfo is None or self.timestamp.tzinfo.utcoffset(self.timestamp) is None:
             raise DomainValidationError("timestamp must be timezone-aware")
+        require_matching_ticker(self.symbol, self.identity)

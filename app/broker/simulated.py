@@ -3,9 +3,10 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from app.domain.enums import OrderSide, OrderStatus
+from app.domain.enums import OrderSide, OrderStatus, OrderType
 from app.domain.execution import apply_slippage, commission_on
 from app.domain.models.fill import Fill
+from app.domain.models.identity import IdentityRef, position_key_for
 from app.domain.models.order import Order
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.position import Position
@@ -52,6 +53,23 @@ class SimulatedBroker:
         self._market_prices = dict(prices)
         self._session_time = session_time
 
+    def retarget_listings(
+        self,
+        listings: Mapping[str, tuple[str, IdentityRef | None]],
+    ) -> None:
+        updated: dict[str, Position] = dict(self._positions)
+        for key, position in self._positions.items():
+            listing = listings.get(key)
+            if listing is None:
+                continue
+            symbol, identity = listing
+            if identity is None:
+                continue
+            if position.symbol == symbol and position.identity is identity:
+                continue
+            updated[key] = replace(position, symbol=symbol, identity=identity)
+        self._positions = updated
+
     def mark_to_market(
         self,
         prices: Mapping[str, Decimal],
@@ -59,12 +77,12 @@ class SimulatedBroker:
         unvalued: Collection[str] = frozenset(),
     ) -> None:
         updated: dict[str, Position] = {}
-        for symbol, position in self._positions.items():
-            if symbol in unvalued:
-                updated[symbol] = replace(position, valued=False)
+        for key, position in self._positions.items():
+            if position.symbol in unvalued:
+                updated[key] = replace(position, valued=False)
                 continue
-            market_price = prices.get(symbol, position.market_price)
-            updated[symbol] = replace(position, market_price=market_price, valued=True)
+            market_price = prices.get(position.symbol, position.market_price)
+            updated[key] = replace(position, market_price=market_price, valued=True)
         self._positions = updated
 
     def get_account(self) -> Portfolio:
@@ -95,6 +113,45 @@ class SimulatedBroker:
     @property
     def losing_trades(self) -> int:
         return self._losing_trades
+
+    def liquidate_at(
+        self,
+        symbol: str,
+        price: Decimal,
+        session_time: datetime,
+        *,
+        client_order_id: str,
+        booking_key: str | None = None,
+    ) -> Order | None:
+        """Sell the full position at ``price`` with no slippage.
+
+        Used for known listing termination (delisting / acquisition). This is
+        not a next-open market order: there is no tape on the following session.
+        Booking uses the held position's identity. ``symbol`` is display/execution.
+        """
+        if booking_key is not None:
+            existing = self._positions.get(booking_key)
+        else:
+            found = self._position_by_execution_symbol(symbol)
+            existing = None if found is None else found[1]
+        if existing is None or existing.quantity <= 0 or price <= 0:
+            return None
+        self._session_time = session_time
+        order = Order(
+            symbol=existing.symbol,
+            side=OrderSide.SELL,
+            quantity=existing.quantity,
+            order_type=OrderType.MARKET,
+            limit_price=None,
+            client_order_id=client_order_id,
+            status=OrderStatus.SUBMITTED,
+            identity=existing.identity,
+        )
+        trade_value = order.quantity * price
+        commission = commission_on(trade_value, self._commission_rate)
+        filled = self._fill_sell(order, price, trade_value, commission, price)
+        self._orders.append(filled)
+        return filled
 
     def submit_order(self, order: Order) -> Order:
         if not self._connected:
@@ -140,6 +197,16 @@ class SimulatedBroker:
                 return order.status
         return OrderStatus.FAILED
 
+    def _position_by_execution_symbol(self, symbol: str) -> tuple[str, Position] | None:
+        matches = [
+            (key, position)
+            for key, position in self._positions.items()
+            if position.symbol == symbol
+        ]
+        if len(matches) != 1:
+            return None
+        return matches[0]
+
     def _fill_buy(
         self,
         order: Order,
@@ -152,7 +219,8 @@ class SimulatedBroker:
         if cost > self._cash:
             return replace(order, status=OrderStatus.REJECTED)
 
-        existing = self._positions.get(order.symbol)
+        key = position_key_for(order)
+        existing = self._positions.get(key)
         new_qty = order.quantity if existing is None else existing.quantity + order.quantity
         if existing is None or existing.quantity == 0:
             average_price = fill_price
@@ -160,11 +228,15 @@ class SimulatedBroker:
             average_price = (
                 existing.quantity * existing.average_price + order.quantity * fill_price
             ) / new_qty
-        self._positions[order.symbol] = Position(
+        identity = order.identity if order.identity is not None else (
+            existing.identity if existing is not None else None
+        )
+        self._positions[key] = Position(
             symbol=order.symbol,
             quantity=new_qty,
             average_price=average_price,
             market_price=fill_price,
+            identity=identity,
         )
         self._cash -= cost
         self._record_fill(order, fill_price, commission, market_price)
@@ -178,7 +250,8 @@ class SimulatedBroker:
         commission: Decimal,
         market_price: Decimal,
     ) -> Order:
-        existing = self._positions.get(order.symbol)
+        key = position_key_for(order)
+        existing = self._positions.get(key)
         if existing is None or order.quantity > existing.quantity:
             return replace(order, status=OrderStatus.REJECTED)
 
@@ -189,12 +262,15 @@ class SimulatedBroker:
 
         remaining = existing.quantity - order.quantity
         if remaining == 0:
-            del self._positions[order.symbol]
+            del self._positions[key]
         else:
-            self._positions[order.symbol] = replace(
+            identity = order.identity if order.identity is not None else existing.identity
+            self._positions[key] = replace(
                 existing,
+                symbol=order.symbol,
                 quantity=remaining,
                 market_price=fill_price,
+                identity=identity,
             )
         self._cash += trade_value - commission
         self._record_fill(order, fill_price, commission, market_price)
@@ -208,7 +284,7 @@ class SimulatedBroker:
         market_price: Decimal,
     ) -> None:
         slippage = abs(fill_price - market_price) * order.quantity
-        position = self._positions.get(order.symbol)
+        position = self._positions.get(position_key_for(order))
         position_quantity = position.quantity if position is not None else Decimal("0")
         account = self.get_account()
         fill = Fill(
@@ -223,6 +299,7 @@ class SimulatedBroker:
             position_quantity=position_quantity,
             market_price=market_price,
             portfolio_value=account.equity,
+            identity=order.identity,
         )
         self._fills.append(fill)
         self._total_commission += commission

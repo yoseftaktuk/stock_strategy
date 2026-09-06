@@ -24,8 +24,9 @@ class InMemoryUniverseProvider(UniverseProvider):
         self._current_only = current_only
 
     def get_symbols(self, as_of: date) -> list[str]:
+        return sorted({item.symbol for item in self.get_memberships(as_of)})
+
+    def get_memberships(self, as_of: date) -> tuple[ConstituentMembership, ...]:
         if self._current_only:
-            selected = [item.symbol for item in self._memberships if item.end_date is None]
-        else:
-            selected = [item.symbol for item in self._memberships if item.contains(as_of)]
-        return sorted(set(selected))
+            return tuple(item for item in self._memberships if item.end_date is None)
+        return tuple(item for item in self._memberships if item.contains(as_of))

@@ -19,10 +19,16 @@ class BacktestConfig:
     symbols: tuple[str, ...] = field(default_factory=tuple)
     warmup_sessions: int = 253
     universe_kind: str | None = None
+    signal_start: date | None = None
 
     def __post_init__(self) -> None:
         if self.start_date > self.end_date:
             raise BacktestConfigError("start_date must be <= end_date")
+        if self.signal_start is not None:
+            if self.signal_start < self.start_date:
+                raise BacktestConfigError("signal_start must be >= start_date")
+            if self.signal_start > self.end_date:
+                raise BacktestConfigError("signal_start must be <= end_date")
         if self.initial_capital <= 0:
             raise BacktestConfigError("initial_capital must be > 0")
         if self.commission_rate < 0:

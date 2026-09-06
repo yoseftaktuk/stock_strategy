@@ -7,6 +7,7 @@ import logging
 from app.application.order_service import OrderService
 from app.application.portfolio_service import PortfolioService
 from app.backtest.config import BacktestConfig
+from app.backtest.warmup import WarmupBounds, resolve_warmup_bounds
 from app.backtest.diagnostics import (
     CURRENT_UNIVERSE_WARNING,
     DataCoverageSnapshot,
@@ -15,19 +16,24 @@ from app.backtest.diagnostics import (
     historical_unusable_market_data_warning,
     is_current_universe,
 )
+from app.backtest.identity_attach import attach_signal_identities, occupancy_by_ticker
 from app.backtest.metrics import MetricsCalculator
 from app.backtest.result import BacktestResult
 from app.broker.interface import BacktestBroker
 from app.data.identity_quality import apply_identity
 from app.data.price_quality import unusable_symbols as classify_unusable_symbols
 from app.domain.enums import OrderStatus
+from app.domain.identity import IdentityResolver
 from app.domain.models.equity import EquityPoint
+from app.domain.models.identity import position_key_for
 from app.domain.models.market_bar import MarketBar
 from app.domain.models.order import Order
 from app.domain.models.position import Position
 from app.domain.models.target import TargetPortfolio
 from app.risk.risk_manager import RiskManager
+from app.security_master.identity_resolver import CatalogIdentityResolver
 from app.security_master.interface import SecurityMaster
+from app.security_master.termination import is_known_listing_termination
 from app.strategy.base import Strategy
 from app.universe.coverage import missing_market_data_symbols
 from app.universe.factory import HISTORICAL_SP500
@@ -49,6 +55,7 @@ class BacktestEngine:
         metrics_calculator: MetricsCalculator | None = None,
         universe_provider: UniverseProvider | None = None,
         security_master: SecurityMaster | None = None,
+        identity_resolver: IdentityResolver | None = None,
     ) -> None:
         self._strategy = strategy
         self._broker = broker
@@ -59,6 +66,12 @@ class BacktestEngine:
         self._metrics = metrics_calculator or MetricsCalculator()
         self._universe_provider = universe_provider
         self._security_master = security_master
+        if identity_resolver is not None:
+            self._identity_resolver = identity_resolver
+        elif security_master is not None:
+            self._identity_resolver = CatalogIdentityResolver.from_catalog(security_master)
+        else:
+            self._identity_resolver = CatalogIdentityResolver()
 
     def run(
         self,
@@ -73,8 +86,15 @@ class BacktestEngine:
 
         market_data, identity_unusable = apply_identity(market_data, self._security_master)
         trading_dates, bars_by_date = _build_calendar(market_data, start_date, end_date)
-        warmup = self._warmup_sessions()
-        rebalance_dates = _monthly_rebalance_dates(trading_dates, warmup)
+        bounds = self._resolve_warmup_bounds(start_date, end_date)
+        rebalance_dates = _monthly_rebalance_dates(
+            trading_dates,
+            bounds.in_window_warmup_sessions,
+            signal_start=bounds.signal_start,
+        )
+        first_eligible = min(rebalance_dates) if rebalance_dates else None
+        bounds = bounds.with_first_eligible(first_eligible)
+        performance_dates = [session for session in trading_dates if session >= bounds.performance_start]
         warnings: list[str] = []
         submitted: list[Order] = []
         pending_target: TargetPortfolio | None = None
@@ -87,6 +107,7 @@ class BacktestEngine:
         unusable.update(identity_unusable)
         unusable_set = set(unusable)
         last_bar_dates = _last_bar_dates(market_data)
+        last_closes = _last_closes(market_data)
         warned_unvalued: set[str] = set()
         unvalued_symbols: set[str] = set()
         if is_current_universe(self._config.universe_kind):
@@ -96,13 +117,14 @@ class BacktestEngine:
                 f"No trading days between {start_date.isoformat()} and {end_date.isoformat()}. "
                 "Loaded bars are empty or outside the requested period."
             )
-        elif not rebalance_dates:
+        elif not performance_dates:
             warnings.append(
-                "No monthly rebalance ran: need "
-                f"{warmup} warmup sessions, but the calendar has {len(trading_dates)} "
-                f"trading days ({trading_dates[0].isoformat()} to {trading_dates[-1].isoformat()}). "
-                "Import a longer daily series before the start date."
+                "No trading days on or after "
+                f"{bounds.performance_start.isoformat()} in "
+                f"{start_date.isoformat()} → {end_date.isoformat()}."
             )
+        elif not rebalance_dates:
+            warnings.append(_no_rebalance_warning(bounds, trading_dates))
 
         if not self._broker.is_connected():
             self._broker.connect()
@@ -111,7 +133,7 @@ class BacktestEngine:
         peak_equity = self._config.initial_capital
         previous_equity: Decimal | None = None
 
-        for session in trading_dates:
+        for session in performance_dates:
             day_bars = bars_by_date[session]
             opens = {
                 symbol: bar.open
@@ -125,7 +147,25 @@ class BacktestEngine:
             }
             session_time = _session_timestamp(session, day_bars)
 
+            submitted.extend(
+                _apply_known_terminations(
+                    self._broker,
+                    session,
+                    session_time,
+                    last_bar_dates,
+                    last_closes,
+                    self._security_master,
+                    warnings,
+                )
+            )
+
             if pending_target is not None:
+                self._broker.retarget_listings(
+                    {
+                        position_key_for(item): (item.symbol, item.identity)
+                        for item in pending_target.positions
+                    }
+                )
                 missing = _missing_execution_symbols(pending_target, self._broker.get_positions(), opens)
                 for symbol in missing:
                     message = f"missing open for execution symbol={symbol} date={session.isoformat()}"
@@ -196,7 +236,17 @@ class BacktestEngine:
                     missing_by_rebalance.append((session, missing))
                 universe_sizes.append(universe_members)
                 evaluation = self._strategy.evaluate(signal_data, session)
-                signals = evaluation.signals
+                occupancy = (
+                    occupancy_by_ticker(self._universe_provider.get_memberships(session))
+                    if self._universe_provider is not None
+                    else {}
+                )
+                signals = attach_signal_identities(
+                    evaluation.signals,
+                    self._identity_resolver,
+                    session,
+                    occupancy,
+                )
                 pending_target = self._portfolio_service.build_target_portfolio(signals)
                 counts = evaluation.counts
                 if counts.insufficient_history:
@@ -236,15 +286,16 @@ class BacktestEngine:
                 "for next-open fills."
             )
 
+        warnings.extend(_insufficient_warmup_warnings(bounds, rebalance_diagnostics, self._lookback_days()))
         metrics = self._metrics.calculate(
             equity_curve,
             self._config.initial_capital,
             risk_free_rate=self._config.risk_free_rate,
-            start=start_date,
+            start=bounds.performance_start,
             end=end_date,
         )
         final_equity = equity_curve[-1].equity if equity_curve else self._config.initial_capital
-        spy_return = _spy_buy_hold_return(bars_by_date, trading_dates)
+        spy_return = _spy_buy_hold_return(bars_by_date, performance_dates)
         fills = self._broker.get_fills()
         warnings.extend(_summarize_missing_market_data(missing_by_rebalance, market_data))
         member_unusable = {
@@ -317,14 +368,26 @@ class BacktestEngine:
             coverage=coverage,
             unusable_symbols=unusable_symbol_tuple,
             unvalued_symbols=tuple(sorted(unvalued_symbols)),
+            signal_start=bounds.signal_start,
+            warmup_start=bounds.warmup_start,
+            first_signal_date=bounds.first_eligible_signal_date,
         )
 
-    def _warmup_sessions(self) -> int:
+    def _resolve_warmup_bounds(self, start_date: date, end_date: date) -> WarmupBounds:
+        return resolve_warmup_bounds(
+            start=start_date,
+            end=end_date,
+            lookback_days=self._lookback_days(),
+            signal_start=self._config.signal_start,
+            warmup_sessions=self._config.warmup_sessions,
+        )
+
+    def _lookback_days(self) -> int | None:
         strategy_config = getattr(self._strategy, "config", None)
         lookback = getattr(strategy_config, "lookback_days", None)
         if isinstance(lookback, int) and lookback > 0:
-            return lookback + 1
-        return self._config.warmup_sessions
+            return lookback
+        return None
 
 
 def _universe_market_data(
@@ -344,11 +407,16 @@ def _universe_market_data(
         if symbol in unusable and market_data.get(symbol)
     )
     filtered = {
-        symbol: bars
+        symbol: _bars_as_of(bars, as_of)
         for symbol in eligible
         if (bars := market_data.get(symbol)) and symbol not in unusable
     }
     return filtered, missing, eligible, unusable_members
+
+
+def _bars_as_of(bars: Sequence[MarketBar], as_of: date) -> list[MarketBar]:
+    """Return history through ``as_of`` (no observation with timestamp.date() > T)."""
+    return [bar for bar in bars if bar.timestamp.date() <= as_of]
 
 
 def _unusable_price_warnings(unusable: Mapping[str, str]) -> list[str]:
@@ -405,10 +473,17 @@ def _build_calendar(
     return sorted(bars_by_date), bars_by_date
 
 
-def _monthly_rebalance_dates(trading_dates: Sequence[date], warmup_sessions: int) -> set[date]:
+def _monthly_rebalance_dates(
+    trading_dates: Sequence[date],
+    warmup_sessions: int,
+    *,
+    signal_start: date | None = None,
+) -> set[date]:
     selected: set[date] = set()
     for index, session in enumerate(trading_dates):
         if index + 1 < warmup_sessions:
+            continue
+        if signal_start is not None and session < signal_start:
             continue
         is_month_start = index == 0 or (
             session.year,
@@ -417,6 +492,47 @@ def _monthly_rebalance_dates(trading_dates: Sequence[date], warmup_sessions: int
         if is_month_start:
             selected.add(session)
     return selected
+
+
+def _no_rebalance_warning(bounds: WarmupBounds, trading_dates: Sequence[date]) -> str:
+    first = trading_dates[0].isoformat()
+    last = trading_dates[-1].isoformat()
+    if bounds.mode == "explicit_signal" and bounds.signal_start is not None:
+        return (
+            "No monthly rebalance ran: no first-of-month session on or after "
+            f"signal_start={bounds.signal_start.isoformat()} "
+            f"({first} to {last})."
+        )
+    return (
+        "No monthly rebalance ran: need "
+        f"{bounds.in_window_warmup_sessions} warmup sessions, but the calendar has "
+        f"{len(trading_dates)} trading days ({first} to {last}). "
+        "Import a longer daily series before the start date."
+    )
+
+
+def _insufficient_warmup_warnings(
+    bounds: WarmupBounds,
+    diagnostics: Sequence[RebalanceDiagnostics],
+    lookback_days: int | None,
+) -> list[str]:
+    if bounds.mode != "explicit_signal" or not diagnostics:
+        return []
+    first = diagnostics[0]
+    if first.selected > 0 or first.insufficient_history <= 0:
+        return []
+    if first.momentum_eligible > 0:
+        return []
+    need = lookback_days + 1 if lookback_days is not None else bounds.in_window_warmup_sessions
+    signal_text = bounds.signal_start.isoformat() if bounds.signal_start is not None else "unset"
+    return [
+        "Insufficient warmup before "
+        f"signal_start={signal_text}: need {need} sessions of history through as_of. "
+        f"First eligible rebalance as_of={first.as_of.isoformat()} had "
+        f"insufficient_history={first.insufficient_history} and selected=0. "
+        "No bars were invented and no future bars were used; signals wait until "
+        "lookback is available on or before as_of."
+    ]
 
 
 def _session_timestamp(session: date, day_bars: Mapping[str, MarketBar]) -> datetime:
@@ -435,17 +551,83 @@ def _last_bar_dates(market_data: Mapping[str, Sequence[MarketBar]]) -> dict[str,
     return last_dates
 
 
+def _last_closes(market_data: Mapping[str, Sequence[MarketBar]]) -> dict[str, Decimal]:
+    last_prices: dict[str, Decimal] = {}
+    for symbol, bars in market_data.items():
+        if not bars:
+            continue
+        last = max(bars, key=lambda bar: bar.timestamp)
+        last_prices[symbol] = last.close
+    return last_prices
+
+
+def _apply_known_terminations(
+    broker: BacktestBroker,
+    session: date,
+    session_time: datetime,
+    last_bar_dates: Mapping[str, date],
+    last_closes: Mapping[str, Decimal],
+    security_master: SecurityMaster | None,
+    warnings: list[str],
+) -> list[Order]:
+    """Realize known delisting/acquisition exits at last quoted close.
+
+    Missing tape without a DELISTED listing remains unvalued. That is a
+    data-quality failure, not a synthetic sale.
+    """
+    submitted: list[Order] = []
+    ended = _ended_positions(broker.get_positions(), session, last_bar_dates)
+    for position in ended:
+        last = last_bar_dates.get(position.symbol)
+        if last is None:
+            continue
+        if not is_known_listing_termination(
+            security_master,
+            position.symbol,
+            last_bar=last,
+            session=session,
+        ):
+            continue
+        price = last_closes.get(position.symbol)
+        if price is None or price <= 0:
+            continue
+        filled = broker.liquidate_at(
+            position.symbol,
+            price,
+            session_time,
+            client_order_id=f"{session.isoformat()}-TERM-{position.symbol}",
+            booking_key=position_key_for(position),
+        )
+        if filled is None:
+            continue
+        submitted.append(filled)
+        warnings.append(
+            "terminal exit at last close "
+            f"(known listing termination) symbol={position.symbol} "
+            f"last_bar={last.isoformat()} date={session.isoformat()}"
+        )
+    return submitted
+
+
+def _ended_positions(
+    positions: Sequence[Position],
+    session: date,
+    last_bar_dates: Mapping[str, date],
+) -> list[Position]:
+    ended: list[Position] = []
+    for position in positions:
+        last = last_bar_dates.get(position.symbol)
+        if last is None or last < session:
+            ended.append(position)
+    return ended
+
+
 def _ended_position_symbols(
     positions: Sequence[Position],
     session: date,
     last_bar_dates: Mapping[str, date],
 ) -> set[str]:
-    ended: set[str] = set()
-    for position in positions:
-        last = last_bar_dates.get(position.symbol)
-        if last is None or last < session:
-            ended.add(position.symbol)
-    return ended
+    return {position.symbol for position in _ended_positions(positions, session, last_bar_dates)}
 
 
 def _missing_execution_symbols(

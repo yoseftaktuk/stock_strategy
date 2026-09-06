@@ -10,6 +10,9 @@ from app.backtest.engine import BacktestEngine
 from app.broker.simulated import SimulatedBroker
 from app.domain.enums import OrderSide
 from app.risk.risk_manager import RiskManager
+from app.security_master.identity_resolver import catalog_security_id
+from app.security_master.interface import SecurityMaster
+from app.security_master.seed import load_known_identities_catalog
 from app.strategy.momentum import MomentumStrategy
 from app.universe.factory import HISTORICAL_SP500
 from app.universe.memory import InMemoryUniverseProvider
@@ -21,7 +24,12 @@ END = date(2024, 3, 21)
 GROW_END = date(2024, 2, 10)
 
 
-def _engine(*, universe=None, universe_kind: str | None = None) -> tuple[BacktestEngine, SimulatedBroker]:
+def _engine(
+    *,
+    universe=None,
+    universe_kind: str | None = None,
+    master: SecurityMaster | None = None,
+) -> tuple[BacktestEngine, SimulatedBroker]:
     config = BacktestConfig(
         start_date=START,
         end_date=END,
@@ -41,6 +49,7 @@ def _engine(*, universe=None, universe_kind: str | None = None) -> tuple[Backtes
         risk_manager=RiskManager(),
         config=config,
         universe_provider=universe,
+        security_master=master,
     )
     return engine, broker
 
@@ -125,7 +134,7 @@ def test_unusable_identity_series_cannot_fill_and_stays_in_pit() -> None:
     universe = InMemoryUniverseProvider(
         (
             membership("KEEP", date(2010, 1, 1)),
-            membership("RICH", date(2010, 1, 1)),
+            membership("HAR", date(2006, 2, 1), date(2017, 3, 13)),
         )
     )
     keep_count = (END - START).days + 1
@@ -139,29 +148,34 @@ def test_unusable_identity_series_cannot_fill_and_stays_in_pit() -> None:
             adjusted_closes=keep_adj,
             volume=2_000_000,
         ),
-        "RICH": make_series(
-            "RICH",
+        "HAR": make_series(
+            "HAR",
             keep_count,
-            start=START,
-            close=Decimal("18614.90"),
+            start=date(2015, 1, 2),
+            close=Decimal("50"),
             volume=2_000_000,
         ),
     }
-    engine, _ = _engine(universe=universe, universe_kind=HISTORICAL_SP500)
-    result = engine.run(START, END, market_data=market_data)
-    assert universe.get_symbols(date(2024, 2, 1)) == ["KEEP", "RICH"]
-    assert "RICH" in result.unusable_symbols
-    assert "RICH" in result.priced_symbols
-    assert all(fill.symbol != "RICH" for fill in result.fills)
+    engine, _ = _engine(
+        universe=universe,
+        universe_kind=HISTORICAL_SP500,
+        master=load_known_identities_catalog(),
+    )
+    result = engine.run(date(2015, 1, 2), date(2015, 3, 21), market_data=market_data)
+    assert universe.get_symbols(date(2015, 2, 1)) == ["HAR", "KEEP"]
+    assert "HAR" in result.unusable_symbols
+    assert "HAR" in result.priced_symbols
+    assert all(fill.symbol != "HAR" for fill in result.fills)
     assert result.coverage is not None
     assert result.coverage.unusable_market_data == 1
     assert "PIT membership was not dropped" in " ".join(result.warnings)
 
 
 @pytest.mark.backtest
-def test_extreme_first_price_cannot_fill() -> None:
+def test_azo_class_high_price_is_usable_and_can_fill() -> None:
     keep_count = (END - START).days + 1
     keep_adj = [Decimal("100") + Decimal("1") * Decimal(index) for index in range(keep_count)]
+    azo_adj = [Decimal("3000") + Decimal("2") * Decimal(index) for index in range(keep_count)]
     market_data = {
         "KEEP": make_series(
             "KEEP",
@@ -171,13 +185,20 @@ def test_extreme_first_price_cannot_fill() -> None:
             adjusted_closes=keep_adj,
             volume=2_000_000,
         ),
-        "RICH": make_series("RICH", keep_count, start=START, close=Decimal("5000"), volume=2_000_000),
+        "AZO": make_series(
+            "AZO",
+            keep_count,
+            start=START,
+            close=Decimal("3200"),
+            adjusted_closes=azo_adj,
+            volume=2_000_000,
+        ),
     }
     engine, _ = _engine()
     result = engine.run(START, END, market_data=market_data)
-    assert "RICH" in result.unusable_symbols
-    assert all(fill.symbol != "RICH" for fill in result.fills)
-    assert any("Unusable price series" in warning for warning in result.warnings)
+    assert "AZO" not in result.unusable_symbols
+    assert any(fill.symbol == "AZO" for fill in result.fills)
+    assert not any("Unusable price series" in warning for warning in result.warnings)
 
 
 @pytest.mark.backtest
@@ -209,25 +230,31 @@ def test_coverage_separates_missing_unusable_and_valid() -> None:
             membership("KEEP", date(2010, 1, 1)),
             membership("MISS", date(2010, 1, 1)),
             membership("SHORT", date(2010, 1, 1)),
-            membership("RICH", date(2010, 1, 1)),
+            membership("HAR", date(2006, 2, 1), date(2017, 3, 13)),
         )
     )
-    keep_count = (END - START).days + 1
+    start = date(2015, 1, 2)
+    end = date(2015, 3, 21)
+    keep_count = (end - start).days + 1
     keep_adj = [Decimal("100") + Decimal("2") * Decimal(index) for index in range(keep_count)]
     market_data = {
         "KEEP": make_series(
             "KEEP",
             keep_count,
-            start=START,
+            start=start,
             close=Decimal("50"),
             adjusted_closes=keep_adj,
             volume=2_000_000,
         ),
-        "SHORT": make_series("SHORT", 3, start=START, close=Decimal("50"), volume=2_000_000),
-        "RICH": make_series("RICH", keep_count, start=START, close=Decimal("1112"), volume=2_000_000),
+        "SHORT": make_series("SHORT", 3, start=start, close=Decimal("50"), volume=2_000_000),
+        "HAR": make_series("HAR", keep_count, start=start, close=Decimal("50"), volume=2_000_000),
     }
-    engine, _ = _engine(universe=universe, universe_kind=HISTORICAL_SP500)
-    result = engine.run(START, END, market_data=market_data)
+    engine, _ = _engine(
+        universe=universe,
+        universe_kind=HISTORICAL_SP500,
+        master=load_known_identities_catalog(),
+    )
+    result = engine.run(start, end, market_data=market_data)
     snapshot = result.coverage
     assert snapshot is not None
     assert snapshot.universe_members == 4
@@ -236,14 +263,14 @@ def test_coverage_separates_missing_unusable_and_valid() -> None:
     assert snapshot.insufficient_history == 1
     assert snapshot.market_data_available == 1
     assert "MISS" not in result.priced_symbols
-    assert "RICH" in result.priced_symbols
-    assert "RICH" in result.unusable_symbols
-    assert all(fill.symbol != "RICH" for fill in result.fills)
-    assert universe.get_symbols(START) == ["KEEP", "MISS", "RICH", "SHORT"]
+    assert "HAR" in result.priced_symbols
+    assert "HAR" in result.unusable_symbols
+    assert all(fill.symbol != "HAR" for fill in result.fills)
+    assert universe.get_symbols(date(2015, 2, 1)) == ["HAR", "KEEP", "MISS", "SHORT"]
     report = result.format_report()
     assert "Unusable Market Data:" in report
     quality = result.format_data_quality_report()
-    assert "Unusable symbols: RICH" in quality
+    assert "Unusable symbols: HAR" in quality
     assert "Research readiness: NOT READY" in quality
 
 
@@ -285,3 +312,112 @@ def test_intra_series_gap_still_holds_last_price() -> None:
     prior = next(bar for bar in reversed(grow) if bar.timestamp.date() < gap_date)
     expected = gap_point.cash + keep_close * keep_qty + prior.close * grow_qty
     assert gap_point.equity == expected
+
+
+def _delisted_master(ticker: str, valid_from: date, valid_to: date):
+    from app.security_master.catalog import InMemorySecurityMaster
+    from app.security_master.models import Security, SecurityTicker
+
+    return InMemorySecurityMaster(
+        [Security(seed_key="gone-co", display_name="Gone Co", status="DELISTED")],
+        [
+            SecurityTicker(
+                seed_key="gone-co",
+                scheme="listing",
+                ticker=ticker,
+                valid_from=valid_from,
+                valid_to=valid_to,
+            ),
+            SecurityTicker(
+                seed_key="gone-co",
+                scheme="yahoo",
+                ticker=ticker,
+                valid_from=valid_from,
+                valid_to=valid_to,
+            ),
+        ],
+    )
+
+
+@pytest.mark.backtest
+def test_known_delisting_liquidates_at_last_close() -> None:
+    market_data = _keep_grow_data()
+    last_grow = market_data["GROW"][-1]
+    master = _delisted_master("GROW", date(2020, 1, 1), date(2024, 2, 11))
+    engine, broker = _engine(master=master)
+    result = engine.run(START, END, market_data=market_data)
+    grow_buys = [fill for fill in result.fills if fill.symbol == "GROW"]
+    assert grow_buys
+    terminal = [
+        fill
+        for fill in result.fills
+        if fill.symbol == "GROW" and "TERM" in fill.order_id
+    ]
+    assert len(terminal) == 1
+    assert terminal[0].price == last_grow.close
+    assert terminal[0].slippage == Decimal("0")
+    assert terminal[0].timestamp.date() == date(2024, 2, 11)
+    assert _qty(result, "GROW") == Decimal("0")
+    assert "GROW" not in result.unvalued_symbols
+    leftover = {position.symbol: position for position in broker.get_positions()}
+    assert "GROW" not in leftover
+    expected_security = catalog_security_id("gone-co")
+    assert terminal[0].security_id == expected_security
+    assert terminal[0].position_key == f"security:{expected_security}"
+    assert terminal[0].symbol == "GROW"
+    assert any("known listing termination" in warning for warning in result.warnings)
+    assert not any("position left unvalued" in warning and "symbol=GROW" in warning for warning in result.warnings)
+    after = [point for point in result.equity_curve if point.date >= date(2024, 2, 11)]
+    assert after
+    keep_closes = {bar.timestamp.date(): bar.close for bar in market_data["KEEP"]}
+    for point in after:
+        keep_qty = _qty(result, "KEEP", point.date)
+        expected = point.cash + keep_closes[point.date] * keep_qty
+        assert point.equity == expected
+
+
+@pytest.mark.backtest
+def test_missing_data_series_end_is_not_liquidated() -> None:
+    market_data = _keep_grow_data()
+    engine, broker = _engine()
+    result = engine.run(START, END, market_data=market_data)
+    assert _qty(result, "GROW") > 0
+    assert result.unvalued_symbols == ("GROW",)
+    leftover = {position.symbol: position for position in broker.get_positions()}
+    assert leftover["GROW"].valued is False
+    assert leftover["GROW"].market_value == Decimal("0")
+    assert not any("known listing termination" in warning for warning in result.warnings)
+    assert not any(fill.order_id.endswith("TERM-GROW") or "TERM-GROW" in fill.order_id for fill in result.fills)
+
+
+@pytest.mark.backtest
+def test_active_ticker_end_is_not_treated_as_delisting() -> None:
+    from app.security_master.catalog import InMemorySecurityMaster
+    from app.security_master.models import Security, SecurityTicker
+
+    market_data = _keep_grow_data()
+    master = InMemorySecurityMaster(
+        [Security(seed_key="still-alive", display_name="Still Alive", status="ACTIVE")],
+        [
+            SecurityTicker(
+                seed_key="still-alive",
+                scheme="listing",
+                ticker="GROW",
+                valid_from=date(2020, 1, 1),
+                valid_to=date(2024, 2, 11),
+            ),
+            SecurityTicker(
+                seed_key="still-alive",
+                scheme="yahoo",
+                ticker="GROW",
+                valid_from=date(2020, 1, 1),
+                valid_to=date(2024, 2, 11),
+            ),
+        ],
+    )
+    engine, broker = _engine(master=master)
+    result = engine.run(START, END, market_data=market_data)
+    assert result.unvalued_symbols == ("GROW",)
+    leftover = {position.symbol: position for position in broker.get_positions()}
+    assert leftover["GROW"].valued is False
+    assert not any("known listing termination" in warning for warning in result.warnings)

@@ -5,6 +5,7 @@ from typing import Protocol
 
 from app.domain.enums import OrderStatus
 from app.domain.models.fill import Fill
+from app.domain.models.identity import IdentityRef
 from app.domain.models.order import Order
 from app.domain.models.portfolio import Portfolio
 from app.domain.models.position import Position
@@ -57,12 +58,38 @@ class SessionAwareBroker(Broker, Protocol):
     ) -> None:
         """Update position market prices without trading.
 
-        Symbols in ``unvalued`` stay on the books but are excluded from NAV.
+        ``unvalued`` holds execution tickers. Matching positions stay on the
+        books but are excluded from NAV. Booking identity is ``position_key``.
         """
 
 
 class BacktestBroker(SessionAwareBroker, Protocol):
     """Session-aware broker that exposes fill statistics for backtests."""
+
+    def retarget_listings(
+        self,
+        listings: Mapping[str, tuple[str, IdentityRef | None]],
+    ) -> None:
+        """Update execution ticker/listing on positions that share a booking key.
+
+        ``listings`` maps ``position_key`` to ``(execution_symbol, identity)``.
+        Quantity and average cost are unchanged.
+        """
+
+    def liquidate_at(
+        self,
+        symbol: str,
+        price: Decimal,
+        session_time: datetime,
+        *,
+        client_order_id: str,
+        booking_key: str | None = None,
+    ) -> Order | None:
+        """Sell the full position at an exact price (no slippage). Terminal exit.
+
+        ``symbol`` is the execution/display ticker. Booking uses ``booking_key``
+        when provided, otherwise the held position whose execution ticker matches.
+        """
 
     def get_fills(self) -> list[Fill]:
         """Return recorded fills."""

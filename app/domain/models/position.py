@@ -2,15 +2,17 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from app.domain.exceptions import DomainValidationError
+from app.domain.models.identity import IdentityCarrier, IdentityRef, require_matching_ticker
 
 
 @dataclass(frozen=True)
-class Position:
+class Position(IdentityCarrier):
     symbol: str
     quantity: Decimal
     average_price: Decimal
     market_price: Decimal
     valued: bool = True
+    identity: IdentityRef | None = None
 
     def __post_init__(self) -> None:
         if not self.symbol.strip():
@@ -21,6 +23,7 @@ class Position:
             raise DomainValidationError("average_price must be non-negative")
         if self.market_price < 0:
             raise DomainValidationError("market_price must be non-negative")
+        require_matching_ticker(self.symbol, self.identity)
 
     @property
     def market_value(self) -> Decimal:

@@ -3,10 +3,11 @@ from decimal import Decimal
 
 from app.domain.enums import OrderSide, OrderStatus, OrderType
 from app.domain.exceptions import DomainValidationError
+from app.domain.models.identity import IdentityCarrier, IdentityRef, require_matching_ticker
 
 
 @dataclass(frozen=True)
-class Order:
+class Order(IdentityCarrier):
     symbol: str
     side: OrderSide
     quantity: Decimal
@@ -14,6 +15,7 @@ class Order:
     limit_price: Decimal | None
     client_order_id: str
     status: OrderStatus = field(default=OrderStatus.CREATED)
+    identity: IdentityRef | None = None
 
     def __post_init__(self) -> None:
         if not self.symbol.strip():
@@ -28,3 +30,4 @@ class Order:
             raise DomainValidationError("limit_price must be greater than zero")
         if self.order_type == OrderType.MARKET and self.limit_price is not None:
             raise DomainValidationError("market orders must not include limit_price")
+        require_matching_ticker(self.symbol, self.identity)

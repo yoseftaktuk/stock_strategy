@@ -112,6 +112,7 @@ def test_cli_supports_universe_and_verbose() -> None:
     assert "--verbose" in completed.stdout
     assert "--start" in completed.stdout
     assert "--end" in completed.stdout
+    assert "--signal-start" in completed.stdout
     assert "--capital" in completed.stdout
 
 

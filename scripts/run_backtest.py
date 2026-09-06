@@ -9,7 +9,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from app.backtest.exceptions import EmptyUniverseError, InsufficientHistoryError
+from app.backtest.exceptions import BacktestConfigError, EmptyUniverseError, InsufficientHistoryError
 from app.backtest.export import write_backtest_export
 from app.backtest.runner import run_momentum_backtest
 from app.backtest.universe_audit import write_detail_csv, write_summary_csv
@@ -26,6 +26,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the momentum strategy backtest.")
     parser.add_argument("--start", type=date.fromisoformat, required=True, help="Start date (YYYY-MM-DD)")
     parser.add_argument("--end", type=date.fromisoformat, required=True, help="End date (YYYY-MM-DD)")
+    parser.add_argument(
+        "--signal-start",
+        type=date.fromisoformat,
+        default=None,
+        help=(
+            "First date for signals and performance (YYYY-MM-DD). "
+            "History before this date is warmup only. "
+            "If omitted, --start keeps the legacy in-window warmup contract."
+        ),
+    )
     parser.add_argument(
         "--capital",
         type=Decimal,
@@ -87,8 +97,9 @@ def main() -> None:
             capital=args.capital,
             symbols=args.symbols,
             universe=args.universe,
+            signal_start=args.signal_start,
         )
-    except (EmptyUniverseError, InsufficientHistoryError, DatabaseConnectionError, UniverseProviderError) as exc:
+    except (BacktestConfigError, EmptyUniverseError, InsufficientHistoryError, DatabaseConnectionError, UniverseProviderError) as exc:
         logging.error("%s", exc)
         raise SystemExit(1) from exc
     print(result.format_report(verbose=args.verbose))

@@ -84,12 +84,18 @@ def run_momentum_backtest(
     symbols: Sequence[str] | None = None,
     universe: str | None = None,
     settings: Settings | None = None,
+    signal_start: date | None = None,
 ) -> BacktestResult:
     """Load history from PostgreSQL and run the monthly momentum backtest.
 
     Explicit ``symbols`` win over ``universe``. ``historical_sp500`` uses a
     point-in-time membership snapshot already stored in PostgreSQL. ``current``
     uses currently active members for every date and is survivorship-biased.
+
+    ``signal_start`` is optional. When omitted, ``--start`` keeps the legacy
+    contract (in-window warmup before the first rebalance; equity from start).
+    When set, history before that date is warmup-only: signals, orders, fills,
+    and performance measurement begin at ``signal_start``.
     """
     resolved_settings = settings or Settings()
     explicit = _normalize_symbols(symbols)
@@ -145,6 +151,7 @@ def run_momentum_backtest(
         universe_provider=universe_provider,
         universe_kind=universe_kind,
         security_master=security_master,
+        signal_start=signal_start,
     )
     return engine.run(start, end, market_data=market_data)
 
@@ -203,6 +210,7 @@ def _build_engine(
     universe_provider: UniverseProvider | None = None,
     universe_kind: str | None = None,
     security_master: SecurityMaster | None = None,
+    signal_start: date | None = None,
 ) -> BacktestEngine:
     slippage_bps = settings.slippage * Decimal("10000")
     backtest_config = BacktestConfig(
@@ -213,6 +221,7 @@ def _build_engine(
         warmup_sessions=momentum_config.lookback_days + 1,
         slippage_bps=slippage_bps,
         universe_kind=universe_kind,
+        signal_start=signal_start,
     )
     return BacktestEngine(
         strategy=MomentumStrategy(momentum_config),

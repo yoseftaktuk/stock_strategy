@@ -14,7 +14,12 @@ class PortfolioService:
         count = Decimal(len(eligible))
         weight = Decimal("1") / count
         positions = tuple(
-            TargetPosition(symbol=signal.symbol, target_weight=weight) for signal in eligible
+            TargetPosition(
+                symbol=signal.symbol,
+                target_weight=weight,
+                identity=signal.identity,
+            )
+            for signal in eligible
         )
         invested = weight * count
         cash_weight = Decimal("1") - invested

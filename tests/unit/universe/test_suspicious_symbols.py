@@ -46,8 +46,6 @@ def test_cached_universe_classifies_xyz_tko_se_har() -> None:
     assert se.price_first >= se.intervals[0].end_date
 
     har = by_symbol["HAR"]
-    assert har.classification == CLASS_OTHER
-    assert "HAR" in report.extreme_first_price
     assert har.price_first is not None
     har_end = har.intervals[0].end_date
     assert har_end is not None

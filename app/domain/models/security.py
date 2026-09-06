@@ -34,7 +34,12 @@ def _normalize_token(value: str, *, field: str) -> str:
 
 @dataclass(frozen=True)
 class Security:
-    """Canonical security identity. ``seed_key`` is stable; ``security_id`` is the DB key."""
+    """Economic / instrument identity. Not a listing.
+
+    ``security_id`` is the canonical runtime identity when assigned (DB PK).
+    ``seed_key`` is an optional human/evidence authoring key. It is not a
+    position key and must not be minted from a ticker.
+    """
 
     seed_key: str
     display_name: str

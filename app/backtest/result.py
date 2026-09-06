@@ -45,6 +45,9 @@ class BacktestResult:
     coverage: DataCoverageSnapshot | None = None
     unusable_symbols: tuple[str, ...] = field(default_factory=tuple)
     unvalued_symbols: tuple[str, ...] = field(default_factory=tuple)
+    signal_start: date | None = None
+    warmup_start: date | None = None
+    first_signal_date: date | None = None
 
     @property
     def universe_label(self) -> str:
@@ -99,6 +102,7 @@ class BacktestResult:
             "========================================\n"
             "Period:\n"
             f"{self.start_date.isoformat()} → {self.end_date.isoformat()}"
+            f"{self._signal_start_block()}"
             f"{universe_block}\n"
             "Initial Capital:\n"
             f"${self.initial_capital:,.2f}\n"
@@ -166,6 +170,11 @@ class BacktestResult:
             "Research readiness: NOT READY\n"
             f"Warnings:\n{warning_text}\n"
         )
+
+    def _signal_start_block(self) -> str:
+        if self.signal_start is None:
+            return ""
+        return f"\nSignal start:\n{self.signal_start.isoformat()}"
 
     def _stale_mtm_after_series_end(self) -> bool:
         if not self.unvalued_symbols:

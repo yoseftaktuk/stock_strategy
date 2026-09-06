@@ -51,25 +51,25 @@ def test_future_members_present_empty_for_correct_pit() -> None:
 
 
 @pytest.mark.unit
-def test_audit_classifies_extreme_first_price_as_other() -> None:
-    periods = (_interval("HAR", date(2006, 2, 1), date(2017, 3, 13)),)
+def test_audit_does_not_treat_high_first_close_as_bad_data() -> None:
+    periods = (_interval("AZO", date(2006, 2, 1), None),)
     windows = {
-        "HAR": PriceWindow(
-            symbol="HAR",
+        "AZO": PriceWindow(
+            symbol="AZO",
             first_date=date(2013, 7, 8),
-            last_date=date(2017, 3, 1),
-            first_close=Decimal("18614.90"),
+            last_date=date(2025, 12, 31),
+            first_close=Decimal("3200"),
         )
     }
     report = audit_universe(
         periods,
         rebalance_dates=[date(2015, 1, 2)],
         price_windows=windows,
-        investigate_symbols=["HAR"],
+        investigate_symbols=["AZO"],
     )
-    investigation = {item.symbol: item for item in report.investigations}["HAR"]
-    assert investigation.classification == CLASS_OTHER
-    assert "HAR" in report.extreme_first_price
+    investigation = {item.symbol: item for item in report.investigations}["AZO"]
+    assert investigation.classification == CLASS_VALID
+    assert report.extreme_first_price == ()
 
 
 @pytest.mark.unit

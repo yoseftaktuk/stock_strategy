@@ -11,22 +11,28 @@ from app.backtest.result import BacktestResult
 def summary_table(result: BacktestResult) -> pd.DataFrame:
     rows: list[dict[str, str]] = [
         {"Metric": "Period", "Value": f"{result.start_date.isoformat()} → {result.end_date.isoformat()}"},
-        {"Metric": "Universe", "Value": result.universe_label},
-        {"Metric": "Initial Capital", "Value": _money(result.initial_capital)},
-        {"Metric": "Final Equity", "Value": _money(result.final_equity)},
-        {"Metric": "Total Return", "Value": _pct(result.total_return)},
-        {"Metric": "CAGR", "Value": _pct(result.annualized_return)},
-        {"Metric": "Volatility", "Value": _pct(result.volatility)},
-        {"Metric": "Sharpe", "Value": f"{result.sharpe_ratio:.2f}"},
-        {"Metric": "Max Drawdown", "Value": _pct(result.max_drawdown)},
-        {"Metric": "Fills", "Value": str(result.number_of_trades)},
-        {
-            "Metric": "Winning / Losing sells",
-            "Value": f"{result.winning_trades} / {result.losing_trades}",
-        },
-        {"Metric": "Commission", "Value": _money(result.total_commission)},
-        {"Metric": "Slippage", "Value": _money(result.total_slippage)},
     ]
+    if result.signal_start is not None:
+        rows.append({"Metric": "Signal start", "Value": result.signal_start.isoformat()})
+    rows.extend(
+        [
+            {"Metric": "Universe", "Value": result.universe_label},
+            {"Metric": "Initial Capital", "Value": _money(result.initial_capital)},
+            {"Metric": "Final Equity", "Value": _money(result.final_equity)},
+            {"Metric": "Total Return", "Value": _pct(result.total_return)},
+            {"Metric": "CAGR", "Value": _pct(result.annualized_return)},
+            {"Metric": "Volatility", "Value": _pct(result.volatility)},
+            {"Metric": "Sharpe", "Value": f"{result.sharpe_ratio:.2f}"},
+            {"Metric": "Max Drawdown", "Value": _pct(result.max_drawdown)},
+            {"Metric": "Fills", "Value": str(result.number_of_trades)},
+            {
+                "Metric": "Winning / Losing sells",
+                "Value": f"{result.winning_trades} / {result.losing_trades}",
+            },
+            {"Metric": "Commission", "Value": _money(result.total_commission)},
+            {"Metric": "Slippage", "Value": _money(result.total_slippage)},
+        ]
+    )
     if is_current_universe(result.universe_kind):
         rows.append({"Metric": "Universe warning", "Value": CURRENT_UNIVERSE_WARNING})
     snapshot = result.coverage
@@ -91,6 +97,9 @@ def fills_table(result: BacktestResult) -> pd.DataFrame:
                 "Commission": float(fill.commission),
                 "Slippage": float(fill.slippage),
                 "Order ID": fill.order_id,
+                "Security ID": fill.security_id,
+                "Listing ID": fill.listing_id,
+                "Position Key": fill.position_key,
             }
             for fill in result.fills
         ]
