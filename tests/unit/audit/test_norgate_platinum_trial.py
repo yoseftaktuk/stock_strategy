@@ -6,7 +6,7 @@ except by importing FROZEN_SAMPLE.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -17,6 +17,7 @@ from app.norgate_trial.bars import (
     bars_from_timeseries,
     interior_gaps,
     series_cover_occupancy,
+    totalreturn_differs,
     validate_staged_bars,
     write_bar_csv,
 )
@@ -31,6 +32,7 @@ from app.norgate_trial.constants import (
     SEA_TRIAL_ASSET_ID,
     STATUS_FAIL,
     STATUS_NOT_TESTABLE,
+    STATUS_PARTIAL,
     STATUS_PASS,
     TRIAL_HISTORY_START,
     VERDICT_NOT_SUITABLE,
@@ -57,10 +59,12 @@ from app.norgate_trial.sample import frozen_sample
 from app.norgate_trial.validation import (
     GateResult,
     build_verdict,
+    gate_a2,
     gate_f1,
     gate_j1,
     gate_p0,
     gate_u1,
+    gate_u2,
 )
 from app.security_master.seed import load_known_identities_catalog
 from app.universe.models import ConstituentMembership
@@ -149,6 +153,78 @@ def _bar(day: str, close: str = "10", adjusted: str | None = "10") -> StagedBar:
         adjusted_close=None if adjusted is None else Decimal(adjusted),
         volume=1000,
     )
+
+
+def _priced_bar(
+    day: str,
+    *,
+    symbol: str = "GME",
+    open_px: str,
+    high: str,
+    low: str,
+    close: str,
+    adjusted: str | None,
+    volume: int = 1000,
+) -> StagedBar:
+    parsed = date.fromisoformat(day)
+    return StagedBar(
+        symbol=symbol,
+        timestamp=datetime(parsed.year, parsed.month, parsed.day, tzinfo=timezone.utc),
+        open=Decimal(open_px),
+        high=Decimal(high),
+        low=Decimal(low),
+        close=Decimal(close),
+        adjusted_close=None if adjusted is None else Decimal(adjusted),
+        volume=volume,
+    )
+
+
+def _session_bar(symbol: str, day: str) -> StagedBar:
+    parsed = date.fromisoformat(day)
+    return StagedBar(
+        symbol=symbol,
+        timestamp=datetime(parsed.year, parsed.month, parsed.day, tzinfo=timezone.utc),
+        open=Decimal("10"),
+        high=Decimal("10"),
+        low=Decimal("10"),
+        close=Decimal("10"),
+        adjusted_close=Decimal("10"),
+        volume=1000,
+    )
+
+
+def _bars_span(symbol: str, first: str, last: str, *, step_days: int = 7) -> list[StagedBar]:
+    start = date.fromisoformat(first)
+    end = date.fromisoformat(last)
+    rows: list[StagedBar] = []
+    cursor = start
+    while cursor < end:
+        rows.append(_session_bar(symbol, cursor.isoformat()))
+        cursor += timedelta(days=step_days)
+    rows.append(_session_bar(symbol, last))
+    return rows
+
+
+def _mapped(
+    ticker: str,
+    start: str,
+    end: str | None,
+    assetid: str,
+    last_quoted: str = "",
+) -> OccupancyMapping:
+    occupancy = Occupancy(
+        ticker,
+        date.fromisoformat(start),
+        date.fromisoformat(end) if end else None,
+        ticker,
+        ticker.lower(),
+    )
+    mapping = OccupancyMapping(occupancy=occupancy)
+    mapping.norgate_symbol = ticker
+    mapping.norgate_asset_id = assetid
+    mapping.last_quoted = last_quoted
+    mapping.mapping_status = "MAPPED"
+    return mapping
 
 
 @pytest.mark.unit
@@ -490,12 +566,12 @@ def test_series_cover_occupancy() -> None:
 
 
 @pytest.mark.unit
-def test_bars_from_timeseries_uses_unadjusted_close_for_totalreturn() -> None:
+def test_bars_from_timeseries_keeps_totalreturn_ohlc_on_one_scale() -> None:
     payload = [
         {
             "Date": "2013-07-08",
             "Open": "10",
-            "High": "11",
+            "High": "13",
             "Low": "9",
             "Close": "12",
             "Unadjusted Close": "6",
@@ -504,9 +580,150 @@ def test_bars_from_timeseries_uses_unadjusted_close_for_totalreturn() -> None:
     ]
     bars = bars_from_timeseries("GME", payload, adjusted=True)
     assert len(bars) == 1
-    assert bars[0].close == Decimal("6")
+    assert bars[0].open == Decimal("10")
+    assert bars[0].high == Decimal("13")
+    assert bars[0].low == Decimal("9")
+    assert bars[0].close == Decimal("12")
     assert bars[0].adjusted_close == Decimal("12")
     assert bars[0].timestamp.tzinfo is not None
+    assert validate_staged_bars(bars, require_adjusted=True) == []
+
+
+@pytest.mark.unit
+def test_dominion_mixed_scale_row_fails_high_ge_close() -> None:
+    mixed = _priced_bar(
+        "2024-09-03",
+        symbol="D",
+        open_px="50.97940444946289",
+        high="52.31591033935547",
+        low="50.94279098510742",
+        close="56.72999954223633",
+        adjusted="51.931434631347656",
+        volume=4610474,
+    )
+    issues = validate_staged_bars([mixed], require_adjusted=True)
+    assert any("high must be >= close" in item for item in issues)
+
+
+@pytest.mark.unit
+def test_dominion_same_scale_totalreturn_passes_ohlc() -> None:
+    tr = _priced_bar(
+        "2024-09-03",
+        symbol="D",
+        open_px="50.97940444946289",
+        high="52.31591033935547",
+        low="50.94279098510742",
+        close="51.931434631347656",
+        adjusted="51.931434631347656",
+        volume=4610474,
+    )
+    unadjusted = _priced_bar(
+        "2024-09-03",
+        symbol="D",
+        open_px="55.689998626708984",
+        high="57.150001525878906",
+        low="55.650001525878906",
+        close="56.72999954223633",
+        adjusted=None,
+        volume=4220493,
+    )
+    assert validate_staged_bars([tr], require_adjusted=True) == []
+    assert validate_staged_bars([unadjusted], require_adjusted=False) == []
+    required = validate_staged_bars([unadjusted], require_adjusted=True)
+    assert any("adjusted_close is required" in item for item in required)
+
+
+@pytest.mark.unit
+def test_dominion_totalreturn_differs_from_unadjusted() -> None:
+    tr = _priced_bar(
+        "2024-09-03",
+        symbol="D",
+        open_px="50.97940444946289",
+        high="52.31591033935547",
+        low="50.94279098510742",
+        close="51.931434631347656",
+        adjusted="51.931434631347656",
+    )
+    unadjusted = _priced_bar(
+        "2024-09-03",
+        symbol="D",
+        open_px="55.689998626708984",
+        high="57.150001525878906",
+        low="55.650001525878906",
+        close="56.72999954223633",
+        adjusted=None,
+    )
+    mixed_export = _priced_bar(
+        "2024-09-03",
+        symbol="D",
+        open_px="50.97940444946289",
+        high="52.31591033935547",
+        low="50.94279098510742",
+        close="56.72999954223633",
+        adjusted="51.931434631347656",
+    )
+    assert totalreturn_differs([tr], [unadjusted]) is True
+    assert totalreturn_differs([mixed_export], [unadjusted]) is True
+    assert gate_a2([tr], [unadjusted]).status == STATUS_PASS
+    equal = _priced_bar(
+        "2024-09-03",
+        symbol="D",
+        open_px="56.73",
+        high="57.15",
+        low="55.65",
+        close="56.72999954223633",
+        adjusted="56.72999954223633",
+    )
+    assert totalreturn_differs([equal], [unadjusted]) is False
+    assert gate_a2([equal], [unadjusted]).status == STATUS_PARTIAL
+
+
+@pytest.mark.unit
+def test_u2_covers_acquired_names_through_last_quoted() -> None:
+    dfs = _mapped("DFS", "2007-07-02", "2025-05-19", "287166", "2025-05-16")
+    ipg = _mapped("IPG", "1996-01-02", "2025-11-28", "133566", "2025-11-26")
+    anss = _mapped("ANSS", "2017-06-19", "2025-07-18", "136017", "2025-07-16")
+    bars = {
+        "287166": _bars_span("DFS-202505", "2024-09-03", "2025-05-16"),
+        "133566": _bars_span("IPG-202511", "2024-09-03", "2025-11-26"),
+        "136017": _bars_span("ANSS-202507", "2024-09-03", "2025-07-16"),
+    }
+    assert series_cover_occupancy(bars["287166"], dfs.occupancy, date(2025, 5, 16)) is True
+    assert series_cover_occupancy(bars["133566"], ipg.occupancy, date(2025, 11, 26)) is True
+    assert series_cover_occupancy(bars["136017"], anss.occupancy, date(2025, 7, 16)) is True
+    gate = gate_u2([dfs, ipg, anss], bars)
+    assert gate.status == STATUS_PASS
+
+
+@pytest.mark.unit
+def test_u2_still_fails_open_listing_short_of_eval_end() -> None:
+    listed = _mapped("D", "1996-01-02", None, "124920")
+    bars = _bars_span("D", "2024-09-03", "2025-12-30")
+    assert series_cover_occupancy(bars, listed.occupancy) is False
+    gate = gate_u2([listed], {"124920": bars})
+    assert gate.status == STATUS_FAIL
+    assert "D" in gate.notes
+
+
+@pytest.mark.unit
+def test_u2_fails_when_last_bar_precedes_last_quoted() -> None:
+    dfs = _mapped("DFS", "2007-07-02", "2025-05-19", "287166", "2025-05-16")
+    bars = _bars_span("DFS-202505", "2024-09-03", "2025-05-01")
+    assert series_cover_occupancy(bars, dfs.occupancy, date(2025, 5, 16)) is False
+    gate = gate_u2([dfs], {"287166": bars})
+    assert gate.status == STATUS_FAIL
+
+
+@pytest.mark.unit
+def test_u2_still_fails_interior_gap_even_when_last_quoted_is_covered() -> None:
+    dfs = _mapped("DFS", "2007-07-02", "2025-05-19", "287166", "2024-10-01")
+    bars = [_session_bar("DFS-202505", "2024-09-03"), _session_bar("DFS-202505", "2024-10-01")]
+    occupancy = dfs.occupancy
+    assert interior_gaps(bars, occupancy)
+    assert series_cover_occupancy(bars, occupancy, date(2024, 10, 1)) is True
+    gate = gate_u2([dfs], {"287166": bars})
+    assert gate.status == STATUS_FAIL
+    assert "DFS" in gate.notes
 
 
 @pytest.mark.unit

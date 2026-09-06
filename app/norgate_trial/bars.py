@@ -11,7 +11,7 @@ from pathlib import Path
 
 from app.data.validation import ParsedBar, validate_historical_parsed_bar
 from app.norgate_trial.client import parse_iso_date
-from app.norgate_trial.constants import BAR_CSV_FIELDS, EVAL_END, MAX_INTERIOR_GAP_DAYS
+from app.norgate_trial.constants import BAR_CSV_FIELDS, MAX_INTERIOR_GAP_DAYS
 from app.norgate_trial.occupancy import Occupancy
 from app.norgate_trial.paths import assert_trial_output_dir
 
@@ -126,18 +126,26 @@ def interior_gaps(bars: Sequence[StagedBar], occupancy: Occupancy) -> list[str]:
     return gaps
 
 
-def series_cover_occupancy(bars: Sequence[StagedBar], occupancy: Occupancy) -> bool:
+def series_cover_occupancy(
+    bars: Sequence[StagedBar],
+    occupancy: Occupancy,
+    last_quoted: date | None = None,
+) -> bool:
     if not bars:
         return False
     first = min(item.timestamp.date() for item in bars)
     last = max(item.timestamp.date() for item in bars)
-    return first <= occupancy.eval_start() and last >= occupancy.eval_end()
+    expected_last = expected_last_session(occupancy, last_quoted)
+    return first <= occupancy.eval_start() and last >= expected_last
 
 
 def totalreturn_differs(totalreturn: Sequence[StagedBar], unadjusted: Sequence[StagedBar]) -> bool | None:
     if not totalreturn or not unadjusted:
         return None
-    by_day_tr = {item.timestamp.date(): item.close for item in totalreturn}
+    by_day_tr: dict[date, Decimal] = {}
+    for item in totalreturn:
+        adjusted = item.adjusted_close if item.adjusted_close is not None else item.close
+        by_day_tr[item.timestamp.date()] = adjusted
     by_day_raw = {item.timestamp.date(): item.close for item in unadjusted}
     shared = set(by_day_tr) & set(by_day_raw)
     if not shared:
@@ -182,7 +190,6 @@ def _record_to_bar(symbol: str, raw: dict[str, object], *, adjusted: bool) -> St
     if timestamp is None:
         return None
     close = _decimal(raw.get("Close") or raw.get("close"))
-    unadjusted = _decimal(raw.get("Unadjusted Close") or raw.get("unadjusted_close"))
     open_px = _decimal(raw.get("Open") or raw.get("open")) or close
     high = _decimal(raw.get("High") or raw.get("high")) or close
     low = _decimal(raw.get("Low") or raw.get("low")) or close
@@ -201,12 +208,7 @@ def _record_to_bar(symbol: str, raw: dict[str, object], *, adjusted: bool) -> St
             volume = 0
     if close is None:
         return None
-    if adjusted:
-        close_px = unadjusted if unadjusted is not None else close
-        adjusted_close = close
-    else:
-        close_px = close
-        adjusted_close = None
+    adjusted_close = close if adjusted else None
     if open_px is None or high is None or low is None:
         return None
     return StagedBar(
@@ -215,7 +217,7 @@ def _record_to_bar(symbol: str, raw: dict[str, object], *, adjusted: bool) -> St
         open=open_px,
         high=high,
         low=low,
-        close=close_px,
+        close=close,
         adjusted_close=adjusted_close,
         volume=volume,
     )
@@ -264,9 +266,11 @@ def _decimal(value: object) -> Decimal | None:
         return None
 
 
-def expected_last_session(occupancy: Occupancy) -> date:
-    end = occupancy.eval_end()
-    return min(end, EVAL_END)
+def expected_last_session(occupancy: Occupancy, last_quoted: date | None = None) -> date:
+    occupancy_last = occupancy.eval_end()
+    if last_quoted is None:
+        return occupancy_last
+    return min(occupancy_last, last_quoted)
 
 
 def session_after(day: date, days: int) -> date:

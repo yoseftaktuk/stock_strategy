@@ -211,7 +211,8 @@ def gate_u2(
         if interior_gaps(bars, row.occupancy):
             failures.append(row.occupancy.pit_ticker)
             continue
-        if not series_cover_occupancy(bars, row.occupancy):
+        last_quoted = parse_iso_date(row.last_quoted) if row.last_quoted else None
+        if not series_cover_occupancy(bars, row.occupancy, last_quoted):
             failures.append(row.occupancy.pit_ticker)
     if failures:
         return GateResult("U2", STATUS_FAIL, f"interior gap or short series: {', '.join(sorted(set(failures))[:20])}")
